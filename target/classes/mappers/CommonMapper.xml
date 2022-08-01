@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.common.CommonMapper">
+    <select id="test" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT USERID AS USER_ID, 
+    		   USERNAME AS USER_NAME, 
+    		   USERGROUPNAME AS USER_GROUP_NAME 
+		FROM POP_USERPROFILE
+    </select>
+    <select id="getFileM" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+	    SELECT LOTID AS LOT_ID, STEPSEQ AS STEP_SEQ, TO_CHAR(TKINTIME, 'YYYY-MM-DD HH24:MI:SS') AS TK_IN_TIME, TO_CHAR(TKOUTTIME, 'YYYY-MM-DD HH24:MI:SS') AS TK_OUT_TIME, 
+		        EQPID AS EQP_ID, B.DIV AS LINE, B.PRODUCTSPECGROUP AS PRODUCT_SPEC_GROUP, PARTID AS PART_ID, 
+		        PROGRAM AS PROGRAM, LOTTYPE AS LOT_TYPE, FILENAME AS FILE_NAME, 
+		        T_QTY, G_QTY, YIELD, STEPTYPE AS STEP_TYPE, MONTHKEY AS MONTH_KEY, PGMTYPE AS PGM_TYPE
+		FROM YMS_FILE_M A, POP_PRODUCTSPEC B, POP_MACHINESPEC C
+		<where>
+			<if test="schsttdt != null and schsttdt != '' and schenddt != null and schenddt != ''">
+				A.TKINTIME BETWEEN TO_DATE(#{schsttdt}, 'YYYYMMDD') AND TO_DATE(#{schenddt}, 'YYYYMMDD')+1
+			</if>
+			<if test="stepSeq != null and stepSeq != ''">
+				AND A.STEPSEQ = #{stepSeq}
+			</if>
+			<if test="partId != null and partId != ''">
+				AND A.PARTID = #{partId}
+			</if>
+			<if test="eqpId != null and eqpId != ''">
+				AND A.EQPID = #{eqpId}
+			</if>
+			<if test="lotId != null and lotId != ''">
+				AND A.LOTID = #{lotId}
+			</if>
+			<if test="fileName != null and fileName != ''">
+				AND A.FILENAME LIKE '%' || #{fileName} || '%'
+			</if>
+			<if test="lotType != null and lotType != ''">
+				AND A.LOTTYPE = #{lotType}
+			</if>
+			<if test="pgmName != null and pgmName != ''">
+				AND A.PROGRAM LIKE '%' || #{pgmName} || '%'
+			</if>
+			AND A.PARTID = B.PRODUCTSPECNAME
+			AND A.EQPID = C.MACHINENAME
+    		AND A.PARTIDVERSION = B.PRODUCTSPECVERSION
+		</where>
+		ORDER BY TKINTIME DESC
+    </select>
+    <select id="getFileIndex" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT CATEGORY, TO_CHAR(CREATETIME, 'YYYY-MM-DD HH24:MI:SS') AS CREATE_TIME, FILENAME AS FILE_NAME,
+		       A.MACHINENAME AS MACHINE_NAME, 
+		       CASE WHEN B.MACHINENAME IS NOT NULL THEN 'YES' ELSE 'NO' END REG_SPEC_FLAG,
+		       DIV AS LINE,
+		       OPER_NAME,
+		       UPLOADFLAG AS UPLOAD_FLAG,
+		       EVENTCOMMENT AS EVENT_COMMENT,
+		       PROCFLAG AS PROC_FLAG,
+		       ERRMSG AS ERR_MSG
+		FROM YMS_FILEINDEX A, POP_MACHINESPEC B
+		<where>
+			<if test="schsttdt != null and schsttdt != '' and schenddt != null and schenddt != ''">
+				A.CREATETIME BETWEEN TO_DATE(#{schsttdt},'YYYYMMDD') AND TO_DATE(#{schenddt},'YYYYMMDD')+1
+			</if>		
+			<if test="fileName != null and fileName != ''">
+				AND A.FILENAME LIKE '%' || #{fileName} || '%'
+			</if>
+			<if test="machineName != null and machineName != ''">
+				AND A.MACHINENAME = #{machineName}
+			</if>
+			AND A.MACHINENAME = B.MACHINENAME(+)
+		</where>
+    </select>
+    <select id="getDailyMenuUsageCount" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	  SELECT TO_CHAR(TO_DATE(A.DT, 'YYYYMMDD'), 'YYYY.MM.DD') AS DT, NVL(B.CNT, 0) AS USECNT
+		    FROM 
+		    (SELECT TO_CHAR(TO_DATE(#{schsttdt}, 'YYYYMMDD') + LEVEL - 1, 'YYYYMMDD') AS DT
+		     FROM DUAL
+		     <![CDATA[
+		     CONNECT BY LEVEL <= TO_DATE(#{schenddt},'YYYYMMDD') - TO_DATE(#{schsttdt},'YYYYMMDD') + 1) A,
+		     ]]> 
+		     (SELECT TO_CHAR(STARTDATE, 'YYYYMMDD') AS DT, COUNT(*) AS CNT FROM YMS_USERLOG 
+		        WHERE STARTDATE BETWEEN TO_DATE(#{schsttdt} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{schenddt} || '235959', 'YYYYMMDDHH24MISS')
+		            <if test="menuNm != null and menuNm != ''">
+						AND MODULEID IN (SELECT MENUNAME FROM POP_MENU WHERE CAPTION LIKE '%' || #{menuNm} || '%')
+					</if>
+					<if test="userNm != null and userNm != ''">
+						AND USERID IN (SELECT USERID FROM POP_USERPROFILE WHERE USERNAME LIKE '%' || #{userNm} || '%')
+					</if>
+		        GROUP BY TO_CHAR(STARTDATE, 'YYYYMMDD')
+		     ) B
+		   WHERE A.DT = B.DT(+)
+		ORDER BY A.DT ASC
+    </select>
+    <select id="getDailyMenuCountList" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT B.FACTORYNAME, B.USERID, A.USERNAME, 
+    			TO_CHAR(B.STARTDATE, 'YYYY.MM.DD. HH24:MI:SS') AS STARTDATE, 
+    			B.MODULEID, 
+    			TO_CHAR(B.ENDDATE, 'YYYY.MM.DD. HH24:MI:SS') AS ENDDATE, 
+    			B.MODULENAME 
+		FROM POP_USERPROFILE A,
+		     YMS_USERLOG B
+		WHERE B.STARTDATE LIKE TO_DATE(REPLACE(#{schdt}, '.', ''), 'YYYYMMDD')
+		    AND A.USERID = B.USERID
+		<if test="menuNm != null and menuNm != ''">
+			AND B.MODULEID IN (SELECT MENUNAME FROM POP_MENU WHERE CAPTION LIKE '%' || #{menuNm} || '%')
+		</if>
+		<if test="userNm != null and userNm != ''">
+			AND A.USERNAME LIKE '%' || #{userNm} || '%'
+		</if>    
+		ORDER BY STARTDATE ASC
+    </select>
+    <select id="getNotMappingOperations" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+  		SELECT DISTINCT A.FACTORYNAME, A.PROCESSOPERATIONNAME, '00001' PROCESSOPERATIONVERSION, A.AREANAME DESCRIPTION, 'CheckedIn' CHECKSTATE, 'Active' ACTIVESTATE, TO_CHAR(SYSDATE, 'YYYY-MM-DD') AS CREATETIME,
+                'master' CREATEUSER, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') CHECKOUTTIME, NULL CHECKOUTUSER, 'Process' PROCESSOPERATIONTYPE, 0 DETAILPROCESSOPERATIONTYPE, 
+                NVL((SELECT MAX(PROCESSOPERATIONGROUP) FROM POP_PROCESSOPERATIONSPEC WHERE DESCRIPTION = A.AREANAME), '-') AS PROCESSOPERATIONGROUP, 
+                'Lot' PROCESSOPERATIONUNIT, '-' ISLOGINREQUIRED, A.DIV AS DEFAULTAREANAME, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') UPDATETIME
+  		FROM POP_LOTHISTORY A
+		WHERE A.TIMEKEY BETWEEN #{schSttDt} AND #{schEndDt}
+			AND (A.PRODUCTSPECNAME, A.PROCESSOPERATIONNAME) IN (SELECT DISTINCT PRODUCTSPECNAME, PROCESSOPERATIONNAME
+                                                    FROM FPS_PRDYIELD_DAY
+                                                    WHERE FACTORYDATE BETWEEN #{schSttDt} AND #{schEndDt}
+                                                        AND PROCESSOPERATIONNAME NOT IN (SELECT PROCESSOPERATIONNAME 
+                                                                                     FROM POP_PROCESSOPERATIONSPEC))
+    		AND A.OLDPROCESSOPERATIONNAME = A.PROCESSOPERATIONNAME
+    	ORDER BY 1,2,3
+    </select>
+    <select id="getProcessOperationSpec" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT *
+    	FROM POP_PROCESSOPERATIONSPEC
+    	WHERE PROCESSOPERATIONNAME = #{operation}
+    	  AND DEFAULTAREANAME = #{line}
+    </select>
+</mapper>

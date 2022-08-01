@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<context:component-scan base-package="com.compact.base, com.compact.base2" />
+	
+	<!-- file upload bean --> 
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="100000000" />
+		<property name="maxInMemorySize" value="100000000" />
+	</bean>
+	
+	<!-- ********************* -->
+	<!-- YMS DATASOURCE CONFIG -->
+	<!-- ********************* -->
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="net.sf.log4jdbc.DriverSpy" />
+		<!-- <property name="url" value="jdbc:log4jdbc:sqlserver://update.imtsoft.me:61433;databaseName=PILATES" /> -->
+		<!-- <property name="url" value="jdbc:log4jdbc:mysql://localhost:3306/nara?serverTimezone=UTC" /> -->
+		<property name="url" value="jdbc:log4jdbc:oracle:thin:@192.168.32.51:1521:SSCYMS" />
+		<property name="username" value="sscymsusr" />
+		<property name="password" value="yms" />
+		<!-- <property name="url" value="jdbc:log4jdbc:oracle:thin:@172.16.102.111:1521/vnmesdb" />
+		<property name="username" value="pkgymsusr" />
+		<property name="password" value="pkgymsusr123" /> -->
+	</bean>
+	
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+	<!-- myBatis mapper -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="typeAliasesPackage" value="com.compact.base" />
+		<property name="configLocation" value="classpath:/mybatis-config.xml" />
+		<property name="mapperLocations" value="classpath:/mappers/*.xml" />
+	</bean>
+
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	
+	<!-- mybatis scanner -->
+	<bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.compact.base" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+	
+	
+	<!-- ********************* -->
+	<!-- POP DATASOURCE CONFIG -->
+	<!-- ********************* -->
+	<bean id="dataSourcePOP" class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="net.sf.log4jdbc.DriverSpy" />
+		<!-- <property name="url" value="jdbc:log4jdbc:sqlserver://update.imtsoft.me:61433;databaseName=PILATES" /> -->
+		<!-- <property name="url" value="jdbc:log4jdbc:mysql://localhost:3306/nara?serverTimezone=UTC" /> -->
+		<property name="url" value="jdbc:log4jdbc:oracle:thin:@192.168.32.10:1521:orcl" />
+		<property name="username" value="ssc" />
+		<property name="password" value="pop" />
+	</bean>
+	
+	<!-- myBatis mapper -->
+	<bean id="sqlSessionFactoryPOP" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSourcePOP" />
+		<property name="typeAliasesPackage" value="com.compact.base2" />
+		<property name="configLocation" value="classpath:/mybatis-config.xml" />
+		<property name="mapperLocations" value="classpath:/pop_mappers/*.xml" />
+	</bean>
+
+	<bean id="sqlSessionPOP" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactoryPOP" />
+	</bean>
+	
+	<bean id="mapperScannerPOP" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.compact.base2" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryPOP" />
+	</bean>
+	
+	<bean id="transactionManagerPOP"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSourcePOP" />
+	</bean>
+
+</beans>

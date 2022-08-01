@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.CTQ.CTQMapper">
+    <select id="getList" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT ROW_NUMBER() OVER (ORDER BY A.UPDATETIME ASC) AS ROWIDX,
+    		   ORDER_NO, 
+		       TO_CHAR(A.CREATE_DTTM, 'YYYY-MM-DD') AS CREATE_DTTM,
+		       A.DIV, TEST_CODE, ITEM_NAME, TRAY_NO, EQUIP, 
+		       B.MIN_VALUE, B.MAX_VALUE, A.AVG_VALUE,
+		       VALUE1, VALUE2, VALUE3, VALUE4, VALUE5,
+		       VALUE6, VALUE7, VALUE8, VALUE9, VALUE10,
+		       VALUE11, VALUE12, VALUE13, VALUE14, VALUE15,
+		       VALUE16, VALUE17, VALUE18, VALUE19, VALUE20
+		FROM POP_TB_TEST_PULL_HISTORY A, POP_TB_TEST_PULL_STANDARD B
+		WHERE A.ITEM_CODE = '6300156L'
+		  AND A.PROVISION = '007'
+		  AND TO_CHAR(A.UPDATETIME, 'YYYYMMDD') = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+		  AND A.ITEM_CODE = B.ITEM_CODE
+		  AND A.PROVISION = B.PROVISION
+		  AND A.DIV = B.DIV
+		  AND A.LOCATE = B.LOCATE
+		  AND A.CHIP_NAME = B.CHIP_NAME
+		ORDER BY A.UPDATETIME ASC
+    </select>
+    <select id="getCTQData" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT 
+	       --ROW_NUMBER() OVER (ORDER BY A.UPDATETIME ASC) AS ROWIDX,
+	       TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE,
+	       #{itemGroup} AS ITEM_GROUP, A.ITEM_CODE, ITEM_NAME,
+	       ITEM1, ITEM2, 
+	       A.CHIP_NAME, EQUIP, 
+	       B.MIN_VALUE, B.MAX_VALUE, A.AVG_VALUE,
+	       DECODE(VALUE1, 0, NULL, VALUE1) AS VALUE1,
+	       DECODE(VALUE2, 0, NULL, VALUE2) AS VALUE2,
+	       DECODE(VALUE3, 0, NULL, VALUE3) AS VALUE3,
+	       DECODE(VALUE4, 0, NULL, VALUE4) AS VALUE4,
+	       DECODE(VALUE5, 0, NULL, VALUE5) AS VALUE5,
+	       DECODE(VALUE6, 0, NULL, VALUE6) AS VALUE6,
+	       DECODE(VALUE7, 0, NULL, VALUE7) AS VALUE7,
+	       DECODE(VALUE8, 0, NULL, VALUE8) AS VALUE8,
+	       DECODE(VALUE9, 0, NULL, VALUE9) AS VALUE9,
+	       DECODE(VALUE10, 0, NULL, VALUE10) AS VALUE10,
+	       DECODE(VALUE11, 0, NULL, VALUE11) AS VALUE11,
+	       DECODE(VALUE12, 0, NULL, VALUE12) AS VALUE12,
+	       DECODE(VALUE13, 0, NULL, VALUE13) AS VALUE13,
+	       DECODE(VALUE14, 0, NULL, VALUE14) AS VALUE14,
+	       DECODE(VALUE15, 0, NULL, VALUE15) AS VALUE15,
+	       DECODE(VALUE16, 0, NULL, VALUE16) AS VALUE16,
+	       DECODE(VALUE17, 0, NULL, VALUE17) AS VALUE17,
+	       DECODE(VALUE18, 0, NULL, VALUE18) AS VALUE18,
+	       DECODE(VALUE19, 0, NULL, VALUE19) AS VALUE19,
+	       DECODE(VALUE20, 0, NULL, VALUE20) AS VALUE20,
+	       <![CDATA[
+	       CASE 
+	        WHEN B.MIN_VALUE IS NULL AND B.MAX_VALUE IS NULL THEN 
+	            NULL
+	        WHEN B.MIN_VALUE IS NOT NULL AND B.MAX_VALUE IS NULL THEN 
+	            CASE 
+	                WHEN B.MIN_VALUE < VALUE1 THEN 'NG VALUE1 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE2 THEN 'NG VALUE2 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE3 THEN 'NG VALUE3 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE4 THEN 'NG VALUE4 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE5 THEN 'NG VALUE5 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE6 THEN 'NG VALUE6 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE7 THEN 'NG VALUE7 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE8 THEN 'NG VALUE8 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE9 THEN 'NG VALUE9 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE10 THEN 'NG VALUE10 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE11 THEN 'NG VALUE11 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE12 THEN 'NG VALUE12 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE13 THEN 'NG VALUE13 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE14 THEN 'NG VALUE14 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE15 THEN 'NG VALUE15 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE16 THEN 'NG VALUE16 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE17 THEN 'NG VALUE17 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE18 THEN 'NG VALUE18 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE19 THEN 'NG VALUE19 LESS MIN VALUE'
+	                WHEN B.MIN_VALUE < VALUE20 THEN 'NG VALUE20 LESS MIN VALUE'
+	            END
+	        WHEN B.MIN_VALUE IS NULL AND B.MAX_VALUE IS NOT NULL THEN
+	            CASE 
+	                WHEN B.MAX_VALUE < VALUE1 THEN 'NG VALUE1 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE2 THEN 'NG VALUE2 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE3 THEN 'NG VALUE3 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE4 THEN 'NG VALUE4 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE5 THEN 'NG VALUE5 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE6 THEN 'NG VALUE6 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE7 THEN 'NG VALUE7 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE8 THEN 'NG VALUE8 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE9 THEN 'NG VALUE9 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE10 THEN 'NG VALUE10 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE11 THEN 'NG VALUE11 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE12 THEN 'NG VALUE12 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE13 THEN 'NG VALUE13 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE14 THEN 'NG VALUE14 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE15 THEN 'NG VALUE15 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE16 THEN 'NG VALUE16 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE17 THEN 'NG VALUE17 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE18 THEN 'NG VALUE18 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE19 THEN 'NG VALUE19 OVER MAX VALUE'
+	                WHEN B.MAX_VALUE < VALUE20 THEN 'NG VALUE20 OVER MAX VALUE'
+	            END
+	       END AS NG
+	       ]]> 
+			FROM POP_TB_TEST_PULL_HISTORY A, POP_TB_TEST_PULL_STANDARD B
+		WHERE A.PROVISION = #{testProv}
+		  AND A.ITEM_CODE IN (SELECT DISTINCT PRODUCTSPECNAME FROM POP_PRODUCTSPEC WHERE PRODUCTSPECGROUP = #{itemGroup})
+		  <if test="itemCode != null and itemCode != ''">
+			AND A.ITEM_CODE = #{itemCode}
+		  </if>
+		  AND TO_CHAR(A.CREATE_DTTM, 'YYYYMMDDHH24MISS') BETWEEN REPLACE(#{startDate}, '-', '') AND REPLACE(#{endDate}, '-', '')
+		  AND A.ITEM_CODE = B.ITEM_CODE
+		  AND A.PROVISION = B.PROVISION
+		  AND A.LOCATE = B.LOCATE
+		  AND A.CHIP_NAME = B.CHIP_NAME
+		ORDER BY A.UPDATETIME ASC
+    </select>
+    
+    <select id="getCTQMailData" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT 'VINA' SITE, A.ITEM_CODE, A.ITEM_NAME, A.ITEM1, A.ITEM2, A.CHIP_NAME, A.EQUIP, A.MIN_VALUE, A.MAX_VALUE, A.CMIN_VALUE, A.CMAX_VALUE 
+		   , A.AVG_VALUE, A.VALUE1  , A.VALUE2, A.VALUE3, A.VALUE4, A.VALUE5, A.VALUE6, A.VALUE7, A.VALUE8, A.VALUE9, A.VALUE10
+		   , A.VALUE11  , A.VALUE12, A.VALUE13, A.VALUE14, A.VALUE15, A.VALUE16, A.VALUE17, A.VALUE18, A.VALUE19, A.VALUE20
+		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP
+		FROM POP_TB_TEST_PULL_HISTORY A, CTQ_COMMON B, CTQ_COMMON C
+		WHERE 1=1
+		<if test="summaryType != null and summaryType != ''">
+			<choose>
+				<when test='summaryType == "1"'>
+					AND A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE, 'yyyymm') || '010000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '2359', 'yyyymmddhh24mi') 
+				</when>
+				<otherwise>
+					AND A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE-30, 'yyyymmdd') || '0000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '2359', 'yyyymmddhh24mi')
+				</otherwise>
+			</choose>
+		</if> 
+		<if test="ngFlag != null and ngFlag != ''">
+			<if test='ngFlag == "Y"'>
+				AND A.OKNG_DIV = 'NG'
+			</if>
+		</if>
+		  AND B.GROUPCODE = 'TEST-PROV-VINA'
+		  AND A.PROVISION = B.CODE
+		  AND B.USE = 'Y' AND B.DEL = 'N' AND B.VALUE1 = 'Y'
+		  AND C.GROUPCODE = 'TEST-LOCATE-VINA'
+		  AND A.LOCATE = C.CODE
+		  AND C.USE = 'Y' AND C.DEL = 'N' AND C.VALUE1 = 'Y'
+		<if test="itemGroup != null and itemGroup != ''">
+			AND A.ITEM_GROUP = #{itemGroup}
+		</if>
+		<if test="testLocate != null and testLocate != ''">
+			AND A.LOCATE = #{testLocate}
+		</if>
+		<if test="testProv != null and testProv != ''">
+			AND A.PROVISION = #{testProv}
+		</if>
+		<if test="products.size != 0">
+			AND A.ITEM_CODE IN
+			<foreach item="product" index="idx" collection="products" open="(" separator="," close=")">
+				#{product}
+			</foreach>
+		</if>
+		ORDER BY ITEM_CODE, A.CREATE_DTTM, PROVISION ASC
+    </select>
+    
+    <select id="getCTQDataCount" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT ITEM_GROUP, ITEM_CODE, ITEM_NAME, COUNT(*) as CNT
+		FROM POP_TB_TEST_PULL_HISTORY A
+		WHERE PROVISION = #{testProv}
+		  AND ITEM_CODE = #{product}
+ 		<if test="summaryType != null and summaryType != ''">
+			<choose>
+				<when test='summaryType == "A"'>
+					AND A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE, 'yyyymm') || '010000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '2359', 'yyyymmddhh24mi') 
+				</when>
+				<otherwise>
+					AND A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE-30, 'yyyymmdd') || '0000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '2359', 'yyyymmddhh24mi')
+				</otherwise>
+			</choose>
+		</if> 
+		<if test="ngFlag != null and ngFlag != ''">
+			<if test='ngFlag == "Y"'>
+				AND A.OKNG_DIV = 'NG'
+			</if>
+		</if>
+		GROUP BY ITEM_GROUP, ITEM_CODE, ITEM_NAME
+    </select>
+    
+    <select id="getCTQMailData_Total" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT 'SSC' SITE, A.ITEM_CODE, A.ITEM_NAME, A.ITEM1, A.ITEM2, A.CHIP_NAME, A.EQUIP, A.MIN_VALUE, A.MAX_VALUE, A.CMIN_VALUE, A.CMAX_VALUE 
+		   , A.VALUE1  , A.VALUE2, A.VALUE3, A.VALUE4, A.VALUE5, A.VALUE6, A.VALUE7, A.VALUE8, A.VALUE9, A.VALUE10
+		   , A.VALUE11  , A.VALUE12, A.VALUE13, A.VALUE14, A.VALUE15, A.VALUE16, A.VALUE17, A.VALUE18, A.VALUE19, A.VALUE20
+		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP
+		FROM POP_TB_TEST_PULL_HISTORY A, CTQ_COMMON B, CTQ_COMMON C
+		WHERE A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE - 1, 'yyyymmdd') || '0830', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '0830', 'yyyymmddhh24mi')
+		  AND B.GROUPCODE = 'TEST-PROV-SSC'
+		  AND A.PROVISION = B.CODE
+		  AND B.USE = 'Y' AND B.DEL = 'N' AND B.VALUE1 = 'Y'
+		  AND C.GROUPCODE = 'TEST-LOCATE-SSC'
+		  AND A.LOCATE = C.CODE
+		  AND C.USE = 'Y' AND C.DEL = 'N' AND C.VALUE1 = 'Y'
+		<if test="itemGroup != null and itemGroup != ''">
+		  AND A.ITEM_GROUP = #{itemGroup}
+		</if>
+		<if test="testProvSsc != null and testProvSsc != ''">
+		  AND A.PROVISION = #{testProvSsc}
+		</if>
+		UNION ALL
+		SELECT 'KMS' SITE, A.ITEM_CODE, A.ITEM_NAME, A.ITEM1, A.ITEM2, A.CHIP_NAME, A.EQUIP, A.MIN_VALUE, A.MAX_VALUE, A.CMIN_VALUE, A.CMAX_VALUE
+		   , A.VALUE1  , A.VALUE2, A.VALUE3, A.VALUE4, A.VALUE5, A.VALUE6, A.VALUE7, A.VALUE8, A.VALUE9, A.VALUE10
+		   , A.VALUE11  , A.VALUE12, A.VALUE13, A.VALUE14, A.VALUE15, A.VALUE16, A.VALUE17, A.VALUE18, A.VALUE19, A.VALUE20
+		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP
+		FROM POP_TB_TEST_PULL_HISTORY_KMS A, CTQ_COMMON B, CTQ_COMMON C
+		WHERE A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE - 1, 'yyyymmdd') || '0830', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '0830', 'yyyymmddhh24mi')
+		  AND B.GROUPCODE = 'TEST-PROV-KMS'
+		  AND A.PROVISION = B.CODE
+		  AND B.USE = 'Y' AND B.DEL = 'N' AND B.VALUE1 = 'Y'
+		  AND C.GROUPCODE = 'TEST-LOCATE-KMS'
+		  AND A.LOCATE = C.CODE
+		  AND C.USE = 'Y' AND C.DEL = 'N' AND C.VALUE1 = 'Y'
+		UNION ALL
+		SELECT 'VINA' SITR, A.ITEM_CODE, A.ITEM_NAME, A.ITEM1, A.ITEM2, A.CHIP_NAME, A.EQUIP, A.MIN_VALUE, A.MAX_VALUE, A.CMIN_VALUE, A.CMAX_VALUE 
+		   , A.VALUE1  , A.VALUE2, A.VALUE3, A.VALUE4, A.VALUE5, A.VALUE6, A.VALUE7, A.VALUE8, A.VALUE9, A.VALUE10
+		   , A.VALUE11  , A.VALUE12, A.VALUE13, A.VALUE14, A.VALUE15, A.VALUE16, A.VALUE17, A.VALUE18, A.VALUE19, A.VALUE20
+		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP
+		FROM POP_TB_TEST_PULL_HISTORY_VINA A, CTQ_COMMON B, CTQ_COMMON C
+		WHERE A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE - 1, 'yyyymmdd') || '0000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '0000', 'yyyymmddhh24mi')
+		  AND B.GROUPCODE = 'TEST-PROV-VINA'
+		  AND A.PROVISION = B.CODE
+		  AND B.USE = 'Y' AND B.DEL = 'N' AND B.VALUE1 = 'Y'
+		  AND C.GROUPCODE = 'TEST-LOCATE-VINA'
+		  AND A.LOCATE = C.CODE
+		  AND C.USE = 'Y' AND C.DEL = 'N' AND C.VALUE1 = 'Y'
+    </select>
+    
+    <select id="getItemGroup" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT PRODUCTSPECGROUP AS ITEM_GROUP
+		FROM POP_PRODUCTSPEC A, POP_TB_TEST_PULL_HISTORY B
+		WHERE B.PROVISION IN ('007', '022')
+		  AND TO_CHAR (B.CREATE_DTTM, 'YYYYMMDD') BETWEEN REPLACE(#{startDate}, '-', '') AND REPLACE(#{endDate}, '-', '')
+		  AND A.PRODUCTSPECNAME = B.ITEM_CODE
+		ORDER BY 1  
+    </select>
+    <select id="getItemCode" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT ITEM_CODE || '(' || ITEM_NAME || ')' AS DESCR, ITEM_CODE
+		FROM POP_TB_TEST_PULL_HISTORY
+		WHERE PROVISION IN ('007', '022')
+		  AND TO_CHAR(CREATE_DTTM, 'YYYYMMDD') BETWEEN REPLACE(#{startDate}, '-', '') AND REPLACE(#{endDate}, '-', '')
+		  AND ITEM_CODE IN (SELECT PRODUCTSPECNAME FROM POP_PRODUCTSPEC WHERE PRODUCTSPECGROUP = #{itemGroup})
+		ORDER BY ITEM_CODE
+    </select>
+    <select id="getTestProvCode" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT VALUE2 AS DESCR, VALUE1 AS CODE
+		FROM TB_CODE_LIST@POPDB
+		WHERE GROUP_CODE = 'TEST_PROV'
+		  AND VALUE1 IN ('007', '022')
+		  AND VALUE1 IN 
+		  			(SELECT DISTINCT PROVISION 
+		  			 FROM POP_TB_TEST_PULL_HISTORY 
+		  			 WHERE TO_CHAR(CREATE_DTTM, 'YYYYMMDD') BETWEEN REPLACE(#{startDate}, '-', '') AND REPLACE(#{endDate}, '-', '') 
+		  			 AND PROVISION IN ('007', '022'))
+    </select>
+    <insert id="addMailImage" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO SPC_CTQ_MAIL_IMG (MAIL_NO, START_DATE, END_DATE, TEST_PROV, ITEM_GROUP, ITEM_CODE, FILE_NAME)
+    	VALUES (#{mailNo}, #{start}, #{end}, #{testProv}, #{itemGroup}, #{itemCode}, #{fileName})
+    </insert>
+    <select id="getCommonCode" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT GROUPCODE, CODE, VALUE, SEQ, VALUE1, VALUE2
+    	FROM CTQ_COMMON
+    	WHERE USE = 'Y'
+    	  AND DEL = 'N'
+    	  AND GROUPCODE = #{groupCode}
+    	ORDER BY SEQ
+    </select>
+    <select id="getNextMailId" parameterType="hashmap" resultType="Integer" statementType="PREPARED">
+    	SELECT SEQ_CTQ_MAIL.NEXTVAL AS MAIL_ID
+    	FROM DUAL
+    </select>
+    <insert id="reserveSendMail" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO CTQ_SENDMAIL (MAIL_ID, MAIL_DATE, SEND_YN, MAIL_HTML, UPDATE_DATE, UPDATE_USER)
+    	VALUES (SEQ_CTQ_MAIL.NEXTVAL, #{mailDate}, 'N', #{mailBody}, SYSDATE, 'Local-YMS-Mailer')
+    </insert>
+    <insert id="reserveSendMailInMailId" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO CTQ_SENDMAIL (MAIL_ID, MAIL_DATE, SEND_YN, MAIL_HTML, UPDATE_DATE, UPDATE_USER, GROUPID, LOCATE, PROV)
+    	VALUES (#{mailId}, #{mailDate}, 'N', #{mailBody}, SYSDATE, 'Local-YMS-Mailer', #{groupId}, #{locate}, #{prov})
+    </insert>
+    <select id="requestSendMail" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call SEND_CTQ_MAIL_DAY
+    	}
+    </select>
+    <select id="requestSendMailInMailId" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call SEND_CTQ_MAIL_DAY_v2
+    		(
+    			#{mailId, mode=IN, jdbcType=INTEGER}
+    		)
+    	}
+    </select>
+    <select id="getProductInfo" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT DISTINCT ITEM_GROUP, ITEM_CODE, ITEM_NAME
+		FROM POP_TB_TEST_PULL_HISTORY
+		WHERE ITEM_CODE = #{product}
+		  AND ITEM_GROUP IS NOT NULL
+    </select>
+    <select id="getMailGroup" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT GROUPID as "groupId", 
+    		   GROUPNAME as "groupName", 
+    		   HOUR as "hour", 
+    		   MIN as "min", 
+    		   SENDTYPE as "sendType", 
+    		   TESTLOCATE AS "testLocate",
+    		   TESTPROV AS "testprov",
+    		   B.VALUE AS "testlocatename",
+    		   C.VALUE AS "testprovname",
+    		   ALL_PRODUCT AS "allProduct",
+    		   ONLYNG as "onlyNG", 
+    		   ROWCOUNT as "rowCount"  
+		FROM CTQ_MAIL_GROUP A, CTQ_COMMON B, CTQ_COMMON C
+		WHERE A.USEYN = 'Y'
+		  AND B.GROUPCODE = 'TEST-LOCATE-VINA'
+		  AND C.GROUPCODE = 'TEST-PROV-VINA'
+		  AND B.CODE = A.TESTLOCATE
+		  AND C.CODE = A.TESTPROV
+		ORDER BY HOUR, MIN
+    </select>
+    <select id="getMailItem" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+	      SELECT ITEMID as "itemId",
+		         GROUPID as "groupId",
+		         MAILTITLE as "mailTitle",
+		         TESTPROV as "testProv",
+		         TESTLOCATE as "testLocate",
+		         PRODUCTGROUP as "productGroup",
+		         PRODUCTSPECNAME as "productSpecName"
+		    FROM CTQ_MAIL_ITEM A
+		   WHERE A.GROUPID = #{groupId}
+			AND A.USEYN = 'Y'
+		ORDER BY PRODUCTGROUP,
+		         PRODUCTSPECNAME,
+		         TESTLOCATE,
+		         TESTPROV
+    </select>
+    <select id="getCTQProductData" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT 'VINA' SITE, A.ITEM_CODE, A.ITEM_NAME, A.ITEM1, A.ITEM2, A.CHIP_NAME, A.EQUIP, A.MIN_VALUE, A.MAX_VALUE, A.CMIN_VALUE, A.CMAX_VALUE 
+		   , A.AVG_VALUE, A.VALUE1  , A.VALUE2, A.VALUE3, A.VALUE4, A.VALUE5, A.VALUE6, A.VALUE7, A.VALUE8, A.VALUE9, A.VALUE10
+		   , A.VALUE11  , A.VALUE12, A.VALUE13, A.VALUE14, A.VALUE15, A.VALUE16, A.VALUE17, A.VALUE18, A.VALUE19, A.VALUE20
+		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP
+		FROM POP_TB_TEST_PULL_HISTORY A, CTQ_COMMON B, CTQ_COMMON C
+		WHERE 1=1
+		<if test="sumOpt != null and sumOpt != ''">
+			<choose>
+				<when test='sumOpt == "A"'>
+					AND A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE, 'yyyymm') || '010000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '2359', 'yyyymmddhh24mi') 
+				</when>
+				<otherwise>
+					AND A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE-30, 'yyyymmdd') || '0000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '2359', 'yyyymmddhh24mi')
+				</otherwise>
+			</choose>
+		</if> 
+		<if test="ngOpt != null and ngOpt != ''">
+			<if test='ngOpt == "Y"'>
+				AND A.OKNG_DIV = 'NG'
+			</if>
+		</if>
+		  AND B.GROUPCODE = 'TEST-PROV-VINA'
+		  AND A.PROVISION = B.CODE
+		  AND B.USE = 'Y' AND B.DEL = 'N' AND B.VALUE1 = 'Y'
+		  AND C.GROUPCODE = 'TEST-LOCATE-VINA'
+		  AND A.LOCATE = C.CODE
+		  AND C.USE = 'Y' AND C.DEL = 'N' AND C.VALUE1 = 'Y'
+		<if test="productGroup != null and productGroup != ''">
+			AND A.ITEM_GROUP = #{productGroup}
+		</if>
+		<if test="productSpecName != null and productSpecName != ''">
+			AND A.ITEM_CODE = #{productSpecName}
+		</if>
+		<if test="testLocate != null and testLocate != ''">
+			AND A.LOCATE = #{testLocate}
+		</if>
+		<if test="testProv != null and testProv != ''">
+			AND A.PROVISION = #{testProv}
+		</if>
+		ORDER BY ITEM_CODE, A.CREATE_DTTM, LOCATE, PROVISION ASC
+    </select>
+    <select id="getCTQProduct" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT B.PRODUCTSPECGROUP AS "productgroup", 
+    		   A.CODE as "productspecname", 
+    		   A.VALUE as "productspecdesc"
+		FROM CTQ_COMMON A, 
+		     (SELECT DISTINCT PRODUCTSPECNAME, PRODUCTSPECGROUP FROM POP_PRODUCTSPEC) B
+		WHERE A.GROUPCODE = 'PRODUCT-VINA'
+		  AND A.USE = 'Y'
+		  AND A.DEL = 'N'
+		  AND A.CODE = B.PRODUCTSPECNAME
+	 	ORDER BY A.SEQ ASC
+    </select>    
+</mapper>

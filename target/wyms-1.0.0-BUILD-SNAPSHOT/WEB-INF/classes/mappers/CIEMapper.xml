@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.CIE.CIEMapper">
+    <select id="getList" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT B.DIV,
+	         C.PRODUCTSPECGROUP,
+	         A.PARTID,
+	         A.LOTID,
+	         B.TARGET,
+	         TO_CHAR(MIN (A.TKINTIME), 'YYYY-MM-DD HH24:MI:SS') AS TKINTIME,
+	         TO_CHAR(MAX (A.TKOUTTIME), 'YYYY-MM-DD HH24:MI:SS') AS TKOUTTIME,
+	         C.DESCRIPTION AS PRODUCT,
+	         A.EQPID,
+	         A.PROGRAM,
+	         SUM (A.T_QTY) AS TQTY,
+	         SUM (A.G_QTY) AS GQTY,
+	         ROUND(SUM (A.G_QTY) / DECODE(SUM (A.T_QTY), 0, NULL, SUM (A.T_QTY)) * 100, 2) AS YIELD
+	    FROM YMS_FILE_M A, POP_LOT B, V_PRODUCTSPEC C, STD_CALENDAR D
+	   WHERE     D.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+	         AND A.TKOUTTIME BETWEEN TO_DATE(D.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(D.ENDTIME,'YYYYMMDDHH24MISS')
+	         AND A.PARTID = #{partId}
+	         <if test="eqpId != null and eqpId != ''">
+	         	AND A.EQPID = #{eqpId}
+	         </if>
+	         AND A.LOTID = B.LOTNAME
+	         AND B.DIV = C.DIV
+	         AND A.PARTID = C.PRODUCTSPECNAME
+	GROUP BY A.LOTID,
+	         B.TARGET,
+	         B.DIV,
+	         A.PARTID,
+	         A.EQPID,
+	         A.PROGRAM,
+	         C.DESCRIPTION,
+	         C.PRODUCTSPECGROUP
+	ORDER BY A.LOTID,
+	         B.TARGET,
+	         B.DIV,
+	         A.PARTID,
+	         A.EQPID,
+	         A.PROGRAM,
+	         C.DESCRIPTION,
+	         C.PRODUCTSPECGROUP
+    </select>
+    <select id="compareProgram" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT PROGRAM 
+		FROM POP_TB_SEPERATOR_ASSY
+		WHERE LOT_NO = #{lotNo}
+  		  AND TRAY_NO = #{trayNo}
+  		  AND ITEM_CODE = #{partId}
+  		<if test="eqpId != null and eqpId != ''">
+  			AND EQUIP_CODE = #{eqpId}
+  		</if>
+		<![CDATA[
+  		  AND PROGRAM <> #{program}
+		]]>
+		ORDER BY PROGRAM
+    </select>
+    
+    <resultMap type="com.compact.base.domain.CIE.dto.FileClobObject" id="FileClobObjectList">
+    	<result property="fmKey" column="FM_KEY"/>
+    	<result property="dataType" column="DATA_TYPE"/>
+    	<result property="flag" column="flag"/>
+    	<result property="itemId" column="itemid"/>
+    	<result property="mdata" column="mdata" jdbcType="CLOB" javaType="java.lang.String"/>
+    </resultMap>
+    <select id="getFileDClob" parameterType="hashmap" resultMap="FileClobObjectList" statementType="PREPARED">
+    	  SELECT A.FMKEY as FM_KEY, C.ENUMNAME as DATA_TYPE, C.DEFAULTFLAG AS FLAG, A.ITEMID as ITEM_ID, A.MDATA
+		    FROM YMS_FILE_D_CLOB A,
+		         YMS_FILE_M B,
+		         POP_ENUMDEFVALUE C
+		   WHERE B.LOTID = #{lotName}
+		     AND B.FMKEY = A.FMKEY
+		     AND C.ENUMNAME IN ('CIE-XY-NAME', 'CIE-BIN-NAME')
+		     AND C.ENUMVALUE = A.ITEMID
+		     AND C.DEFAULTFLAG IN ('X','Y','BIN')
+		ORDER BY A.FMKEY, C.ENUMNAME  
+    </select>
+    
+    <select id="getSeperatorCie" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT CIE, X1, Y1, X2, Y2, X3, Y3, X4, Y4
+		FROM POP_ERP_SEPERATOR_CIE
+		WHERE MATNR = #{partId}
+		  AND ZTEPG = #{program}
+		ORDER BY CIE
+    </select>
+    
+    <select id="getSeperator" parameterType="hashmap" resultType="com.compact.base.domain.CIE.dto.SeperatorObj" statementType="PREPARED">
+    	SELECT MATNR AS PART_ID,
+    		   ZTEPG AS PROGRAM,
+    		   ZBINNO AS BIN_NO,
+    		   ZBNAME AS BIN_NAME,
+    		   ZPASS AS Z_PASS,
+    		   ZSCRAP AS SCRAP_NO
+		FROM POP_ERP_SEPERATOR
+		WHERE MATNR = #{partId}
+		  AND ZTEPG = #{program}
+    </select>
+    
+    
+    
+</mapper>

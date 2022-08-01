@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.chipmaster.bulk.BulkMapper">
+	<select id="getCommonCode" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+		SELECT GROUPCODE,
+			   CODE AS "name", 
+		       CODE AS "text",
+		       VALUE as "value" 
+		FROM CM_COMMON
+		WHERE GROUPCODE = #{groupCode}
+		  AND USE = 'Y'
+		ORDER BY SEQ
+	</select>
+	<select id="getLine" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+		SELECT LIST AS "name",
+		       LIST AS "text",
+		       LIST AS "value" 
+		FROM YMS_UI_OPTION
+		WHERE CLASS1 = 'LINE'
+		  AND CLASS2 = '8100'
+		UNION  
+		SELECT LIST AS "name",
+		       LIST AS "text",
+		       LIST AS "value" 
+		FROM YMS_UI_OPTION@SSCYMSDB
+		WHERE CLASS1 = 'LINE'
+		  AND CLASS2 = '1000'
+		ORDER BY 1 ASC  
+	</select>
+	<select id="getProductGroup" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+		WITH SPEC AS (
+		    SELECT DISTINCT PRODUCTSPECGROUP
+		    FROM POP_PRODUCTSPEC
+		    WHERE FACTORYNAME = '8100'
+		      AND PRODUCTSPECGROUP IS NOT NULL
+		    <if test="line != '' and line != null">
+		    	AND DIV = #{line}
+		    </if>
+		    UNION 
+		    SELECT DISTINCT PRODUCTSPECGROUP
+		    FROM POP_PRODUCTSPEC
+		    WHERE FACTORYNAME = '1000'
+		      AND PRODUCTSPECGROUP IS NOT NULL
+		    <if test="line != '' and line != null">
+		    	AND DIV = #{line}
+		    </if>
+		    )
+		SELECT PRODUCTSPECGROUP AS "name",
+		       PRODUCTSPECGROUP AS "text",
+		       PRODUCTSPECGROUP AS "value"
+		FROM SPEC
+	</select>
+	<select id="getDeployStatus" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+		SELECT GROUPCODE,
+		       VALUE AS "name",
+		       VALUE AS "text",
+		       CODE AS "value" 
+		FROM CM_COMMON
+		WHERE GROUPCODE = 'MASTERSTATUS'
+		  AND USE = 'Y'
+		  AND VALUE1 = '111'
+		ORDER BY SEQ
+	</select>
+</mapper>

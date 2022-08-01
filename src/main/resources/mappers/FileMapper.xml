@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.chipmaster.file.FileMapper">
+    <update id="updateFilePath" parameterType="hashmap" statementType="PREPARED">
+    	UPDATE CM_STD_M
+		SET FILENAME = #{file}
+		WHERE MASTERNO = #{masterNo}
+    </update>
+    <select id="getChipMasterFilePath" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT FILENAME FILE_NAME
+		FROM CM_STD_M
+		WHERE MASTERNO = #{masterNo}
+    </select>
+    <insert id="addCmStdM" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call MDW_CHIPMST_CMF.ADD_CM_STD_M_v2(
+    			#{masterNo, mode=IN, jdbcType=VARCHAR},
+    			#{masterNm, mode=IN, jdbcType=VARCHAR},
+    			#{productSpecCode, mode=IN, jdbcType=VARCHAR},
+    			#{productSpecName, mode=IN, jdbcType=VARCHAR},
+    			#{masterType, mode=IN, jdbcType=VARCHAR},
+    			#{revNo, mode=IN, jdbcType=VARCHAR},
+    			#{fileNm, mode=IN, jdbcType=VARCHAR},
+    			#{productSpecGroup, mode=IN, jdbcType=VARCHAR},
+    			#{documentNo, mode=IN, jdbcType=VARCHAR},
+    			#{revDate, mode=IN, jdbcType=VARCHAR},
+    			#{target1, mode=IN, jdbcType=VARCHAR},
+    			#{target2, mode=IN, jdbcType=VARCHAR},
+    			#{dcSeq, mode=IN, jdbcType=VARCHAR},
+    			#{div, mode=IN, jdbcType=VARCHAR},
+    			#{userId, mode=IN, jdbcType=VARCHAR},
+    			#{outMasterNo, mode=OUT, jdbcType=VARCHAR, javaType=String})
+    	}
+    </insert>
+    <insert id="addCmStdM_v5" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call MDW_CHIPMST_CMF.ADD_CM_STD_M_v5(
+    			#{masterNo, mode=IN, jdbcType=VARCHAR},
+    			#{masterNm, mode=IN, jdbcType=VARCHAR},
+    			#{productSpecCode, mode=IN, jdbcType=VARCHAR},
+    			#{productSpecName, mode=IN, jdbcType=VARCHAR},
+    			#{masterType, mode=IN, jdbcType=NUMERIC},
+    			#{revNo, mode=IN, jdbcType=VARCHAR},
+    			#{fileNm, mode=IN, jdbcType=VARCHAR},
+    			#{productSpecGroup, mode=IN, jdbcType=VARCHAR},
+    			#{documentNo, mode=IN, jdbcType=VARCHAR},
+    			#{revDate, mode=IN, jdbcType=VARCHAR},
+    			#{target1, mode=IN, jdbcType=VARCHAR},
+    			#{target2, mode=IN, jdbcType=VARCHAR},
+    			#{dcSeq, mode=IN, jdbcType=VARCHAR},
+    			#{div, mode=IN, jdbcType=VARCHAR},
+    			#{status, mode=IN, jdbcType=VARCHAR},
+    			#{reqSite, mode=IN, jdbcType=VARCHAR},
+    			#{subKey, mode=IN, jdbcType=VARCHAR},
+    			#{regType, mode=IN, jdbcType=INTEGER},
+    			#{userId, mode=IN, jdbcType=VARCHAR},
+    			#{outMasterNo, mode=OUT, jdbcType=VARCHAR, javaType=String})
+    	}
+    </insert>
+    <insert id="addCmMsrInfo" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call MDW_CHIPMST_CMF.ADD_CM_STD_MEASUREINFO_v1(
+    			#{masterNo, mode=IN, jdbcType=VARCHAR},
+    			#{measureEqpId, mode=IN, jdbcType=VARCHAR},
+    			#{measureJIG, mode=IN, jdbcType=VARCHAR},
+    			#{temperature, mode=IN, jdbcType=VARCHAR},
+    			#{measureIF, mode=IN, jdbcType=VARCHAR},
+    			#{calibration, mode=IN, jdbcType=VARCHAR},
+    			#{itTime, mode=IN, jdbcType=VARCHAR},
+    			#{filter, mode=IN, jdbcType=VARCHAR},
+    			#{vf, mode=IN, jdbcType=VARCHAR},
+    			#{vfEqpId, mode=IN, jdbcType=VARCHAR},
+    			#{userId, mode=IN, jdbcType=VARCHAR},
+    			#{retObj, mode=OUT, jdbcType=INTEGER, javaType=Integer},
+    			#{retMsg, mode=OUT, jdbcType=VARCHAR, javaType=String})
+    	}
+    </insert>
+    <insert id="addCmTolerance" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call MDW_CHIPMST_CMF.ADD_CM_STD_TOLERANCE_v1(
+    			#{masterNo, mode=IN, jdbcType=VARCHAR},
+    			#{cieX, mode=IN, jdbcType=VARCHAR},
+    			#{cieY, mode=IN, jdbcType=VARCHAR},
+    			#{flux, mode=IN, jdbcType=VARCHAR},
+    			#{vf, mode=IN, jdbcType=VARCHAR},
+    			#{wd, mode=IN, jdbcType=VARCHAR},
+    			#{wp, mode=IN, jdbcType=VARCHAR},
+    			#{cri, mode=IN, jdbcType=VARCHAR},
+    			#{userId, mode=IN, jdbcType=VARCHAR},
+    			#{retObj, mode=OUT, jdbcType=INTEGER, javaType=Integer},
+    			#{retMsg, mode=OUT, jdbcType=VARCHAR, javaType=String})
+    	}
+    </insert>
+    <insert id="addCmPartlist" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call MDW_CHIPMST_CMF.ADD_CM_STD_PARTLIST_v1(
+    			#{masterNo, mode=IN, jdbcType=VARCHAR},
+    			#{type, mode=IN, jdbcType=VARCHAR},
+    			#{chipNm, mode=IN, jdbcType=VARCHAR},
+    			#{wd, mode=IN, jdbcType=VARCHAR},
+    			#{phosphor, mode=IN, jdbcType=VARCHAR},
+    			#{leadFrame, mode=IN, jdbcType=VARCHAR},
+    			#{userId, mode=IN, jdbcType=VARCHAR},
+    			#{retObj, mode=OUT, jdbcType=INTEGER, javaType=Integer},
+    			#{retMsg, mode=OUT, jdbcType=VARCHAR, javaType=String})
+    	}
+    </insert>
+    <insert id="addCmData" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call MDW_CHIPMST_CMF.ADD_CM_STD_DATA_v1(
+    			#{masterNo, mode=IN, jdbcType=VARCHAR},
+    			#{no, mode=IN, jdbcType=VARCHAR},
+    			#{cieX, mode=IN, jdbcType=VARCHAR},
+    			#{cieY, mode=IN, jdbcType=VARCHAR},
+    			#{flux, mode=IN, jdbcType=VARCHAR},
+    			#{iv, mode=IN, jdbcType=VARCHAR},
+    			#{vf, mode=IN, jdbcType=VARCHAR},
+    			#{wd, mode=IN, jdbcType=VARCHAR},
+    			#{wp, mode=IN, jdbcType=VARCHAR},
+    			#{cri, mode=IN, jdbcType=VARCHAR},
+    			#{userId, mode=IN, jdbcType=VARCHAR},
+    			#{retObj, mode=OUT, jdbcType=INTEGER, javaType=Integer},
+    			#{retMsg, mode=OUT, jdbcType=VARCHAR, javaType=String})
+    	}
+    </insert>
+    <delete id="deleteCmData" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call MDW_CHIPMST_CMF.DELETE_STD_M_ALL_v1(
+    			#{masterNo, mode=IN, jdbcType=VARCHAR})
+    	}
+    </delete>
+    
+</mapper>

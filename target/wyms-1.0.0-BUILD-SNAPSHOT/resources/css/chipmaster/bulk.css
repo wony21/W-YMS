@@ -1,0 +1,9 @@
+@charset "EUC-KR";
+
+#root {
+	margin: 30px 30px 30px 30px;
+}
+
+.select-custom {
+	padding: 7px !important;
+}

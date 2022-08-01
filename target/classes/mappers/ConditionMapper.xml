@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.cond.ConditionMapper">
+    <select id="getSite" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DESCRIPTION, 
+    		   FACTORYNAME AS FACTORAY_NAME
+    	FROM POP_MESFACTORY
+    	WHERE RESOURCESTATE = 'InService'
+    	  AND FACTORYTYPE = 'ProductionFactory'
+    	<if test="factoryName != null and factoryName != ''">
+    		AND FACTORYNAME LIKE '%' || #{factoryName} || '%'
+    	</if>
+    	ORDER BY FACTORYNAME ASC
+    </select>
+    <select id="getLine" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT LIST AS DESCRIPTION, 
+    		   LIST AS DIV
+    	FROM YMS_UI_OPTION
+    	WHERE MODULEID = 'COMMON'
+    	  AND CLASS1 = 'LINE'
+    	<if test="factoryName != null and factoryName != ''">
+    		AND CLASS2 = #{factoryName}
+    	</if>
+    	<if test="div != null and div != ''">
+    		AND LIST LIKE '%' || #{div} || '%'
+    	</if>
+    	ORDER BY ORDEROPT
+    </select>
+    <select id="getStep" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT LIST
+    	FROM YMS_UI_OPTION
+    	WHERE CLASS1 = 'STEP'
+    	ORDER BY ORDEROPT ASC
+    </select>
+    <select id="getProductSpecGroup" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT PRODUCTSPECGROUP
+    	FROM POP_PRODUCTSPEC
+    	WHERE PRODUCTSPECGROUP IS NOT NULL
+    	  AND FACTORYNAME = #{factoryName}
+    	  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="productSpecGroup != null and productSpecGroup != ''">
+		  	AND PRODUCTSPECGROUP LIKE '%' || #{productSpecGroup} || '%'
+		  </if>
+		  ORDER BY PRODUCTSPECGROUP ASC
+    </select>
+    <select id="getProduct" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT A.PRODUCTSPECNAME, C.DESCRIPTION
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR B,
+		     V_PRODUCTSPEC C
+		WHERE B.FACTORYNAME = #{factoryName}
+		  AND B.FACTORYDATE BETWEEN #{startTime} AND #{endTime}
+		  AND A.TKOUTTIME BETWEEN TO_DATE(B.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(B.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND A.PRODUCTSPECNAME IS NOT NULL
+		  AND A.PRODUCTSPECNAME = C.PRODUCTSPECNAME
+		  <if test="productSpecName != null and productSpecName != ''">
+		  	AND A.PRODUCTSPECNAME LIKE '%' || #{productSpecName} || '%'
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+			  	#{productSpecGroup}
+			  </foreach>
+		  </if>
+		ORDER BY A.PRODUCTSPECNAME ASC
+    </select>
+    <select id="getProgram" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT PROGRAM
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR B
+		WHERE B.FACTORYNAME = #{factoryName}
+		  AND B.FACTORYDATE BETWEEN #{startTime} AND #{endTime}
+		  AND A.TKOUTTIME BETWEEN TO_DATE(B.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(B.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND A.PROGRAM IS NOT NULL
+		  <if test="program != null and program != ''">
+		  	AND A.PROGRAM LIKE '%' || #{program} || '%'
+		  </if>
+		  
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+			  	#{productSpecGroup}
+			  </foreach>
+		  </if>
+		  <if test="productSpecNames != null">
+			  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+			  	#{productSpecName}
+			  </foreach>
+		  </if>
+		ORDER BY A.PROGRAM ASC
+    </select>
+    <select id="getTarget" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT TARGET
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR B,
+		     POP_LOT C
+		WHERE B.FACTORYNAME = #{factoryName}
+		  AND B.FACTORYDATE BETWEEN #{startTime} AND #{endTime}
+		  AND A.TKOUTTIME BETWEEN TO_DATE(B.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(B.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND A.LOTID = C.LOTNAME
+		  AND C.TARGET IS NOT NULL
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="target != null and target != ''">
+		  	AND C.TARGET LIKE '%' || #{target} || '%'
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+			  	#{productSpecGroup}
+			  </foreach>
+		  </if>
+		  <if test="productSpecNames != null">
+			  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+			  	#{productSpecName}
+			  </foreach>
+		  </if>
+		  <if test="programs != null">
+			  <foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+			  	#{program}
+			  </foreach>
+		  </if>
+    </select>
+    <select id="getChipSpec" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT CHIPSPEC
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR B,
+		     POP_LOT C
+		WHERE B.FACTORYNAME = #{factoryName}
+		  AND B.FACTORYDATE BETWEEN #{startTime} AND #{endTime}
+		  AND A.TKOUTTIME BETWEEN TO_DATE(B.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(B.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND A.LOTID = C.LOTNAME
+		  AND C.CHIPSPEC IS NOT NULL
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="chipSpec != null and chipSpec != ''">
+		  	AND C.CHIPSPEC LIKE '%' || #{chipSpec} || '%'
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+			  	#{productSpecGroup}
+			  </foreach>
+		  </if>
+		  <if test="productSpecNames != null">
+			  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+			  	#{productSpecName}
+			  </foreach>
+		  </if>
+		  <if test="programs != null">
+			  <foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+			  	#{program}
+			  </foreach>
+		  </if>
+		  <if test="targets != null">
+			  <foreach item="target" index="i" collection="targets" open="AND C.TARGET IN (" separator="," close=")">
+			  	#{target}
+			  </foreach>
+		  </if>
+		ORDER BY CHIPSPEC
+    </select>
+    <select id="getFrameName" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT FRAMENAME
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR B,
+		     POP_LOT C
+		WHERE B.FACTORYNAME = #{factoryName}
+		  AND B.FACTORYDATE BETWEEN #{startTime} AND #{endTime}
+		  AND A.TKOUTTIME BETWEEN TO_DATE(B.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(B.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND A.LOTID = C.LOTNAME
+		  AND C.FRAMENAME IS NOT NULL
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="frameName != null and frameName != ''">
+		  	AND C.FRAMENAME LIKE '%' || #{frameName} || '%'
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+			  	#{productSpecGroup}
+			  </foreach>
+		  </if>
+		  <if test="productSpecNames != null">
+			  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+			  	#{productSpecName}
+			  </foreach>
+		  </if>
+		  <if test="programs != null">
+			  <foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+			  	#{program}
+			  </foreach>
+		  </if>
+		  <if test="targets != null">
+			  <foreach item="target" index="i" collection="targets" open="AND C.TARGET IN (" separator="," close=")">
+			  	#{target}
+			  </foreach>
+		  </if>
+		  <if test="chipSpecs != null">
+			  <foreach item="chipSpec" index="i" collection="chipSpecs" open="AND C.CHIPSPEC IN (" separator="," close=")">
+			  	#{chipSpec}
+			  </foreach>
+		  </if>
+		ORDER BY FRAMENAME ASC
+    </select>
+    <select id="getLots" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT A.LOTID
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR B,
+		     POP_LOT C
+		WHERE B.FACTORYNAME = #{factoryName}
+		  AND B.FACTORYDATE BETWEEN #{startTime} AND #{endTime}
+		  AND A.TKOUTTIME BETWEEN TO_DATE(B.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(B.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND A.LOTID = C.LOTNAME
+		  AND C.FRAMENAME IS NOT NULL
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="lotId != null and lotId != ''">
+		  	AND A.LOTID LIKE '%' || #{lotId} || '%'
+		  </if>
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+			  	#{productSpecGroup}
+			  </foreach>
+		  </if>
+		  <if test="productSpecNames != null">
+			  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+			  	#{productSpecName}
+			  </foreach>  
+		  </if>
+		  <if test="programs != null">
+			  <foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+			  	#{program}
+			  </foreach>
+		  </if>
+		  <if test="targets != null">
+			  <foreach item="target" index="i" collection="targets" open="AND C.TARGET IN (" separator="," close=")">
+			  	#{target}
+			  </foreach>
+		  </if>
+		  <if test="chipSpecs != null">
+			  <foreach item="chipSpec" index="i" collection="chipSpecs" open="AND C.CHIPSPEC IN (" separator="," close=")">
+			  	#{chipSpec}
+			  </foreach>
+		  </if>
+		  <if test="lotIds != null">
+			  <foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+			  	#{chipSpec}
+			  </foreach>
+		  </if>
+		ORDER BY A.LOTID ASC
+    </select>
+</mapper>
