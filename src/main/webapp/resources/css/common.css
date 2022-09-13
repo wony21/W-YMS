@@ -1,0 +1,28 @@
+@charset "EUC-KR";
+
+a.item {
+	display: flex;
+	flex-direction: row;
+}
+
+a.item > div.content > div.header {
+	font-weight: 700;
+	color: black;
+}
+
+a.item > div.content > div.description {
+	color: #262626;
+}
+
+a.item > div.content > .error {
+	color: red;
+}
+
+.row-list {
+	display: flex;
+	flex-direction: column;
+}
+
+.status-text {
+	color: black !important;
+}

@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.IF.POPIFMapper">
+    <delete id="deleteTbElementTrayAssy" parameterType="hashmap" statementType="PREPARED">
+    	DELETE POP_TB_ELEMENT_TRAY_ASSY
+    	WHERE CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(#{startTime}, 'YYYYMMDD'))
+    						  AND FN_GET_DAY_ENDTIME(TO_DATE(#{endTime}, 'YYYYMMDD'))
+    </delete>
+    <insert id="insertTbElementTrayAssy" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO POP_TB_ELEMENT_TRAY_ASSY
+	    VALUE
+	    SELECT TR_ID,
+	           ORDER_NO,
+	           DIV,
+	           LINE_CODE,
+	           ERP_CODE,
+	           LOT_NO,
+	           TRAY_NO,
+	           WORK_SEQ,
+	           EQUIP_CODE,
+	           PROD_QTY,
+	           EMP_CODE,
+	           DN_FLAG,
+	           START_DTTM,
+	           FINISH_DTTM,
+	           ERP_FLAG,
+	           ERP_IF_DTTM,
+	           CREATE_DTTM,
+	           PROD_DATE,
+	           DEFECT_QTY,
+	           SORT_PGM_NAME,
+	           SORT_FILE_NAME,
+	           CIE_X_AXIS,
+	           CIE_Y_AXIS,
+	           IV_AVG,
+	           VF_AVG,
+	           MZ_IN,
+	           MZ_OUT,
+	           ITEM_CODE,
+	           ROUTE_TEXT,
+	           ERP_ORDER,
+	           RE_FLAG,
+	           WORK_TIME,
+	           YMS_DTTM,
+	           WIP_FLAG
+	      FROM TB_ELEMENT_TRAY_ASSY@POPDB
+	      WHERE CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(#{startTime}, 'YYYYMMDD'))
+    						    AND FN_GET_DAY_ENDTIME(TO_DATE(#{endTime}, 'YYYYMMDD'))
+			AND FINISH_DTTM IS NOT NULL
+    </insert>
+    <delete id="deleteElemntYieldRaw" parameterType="hashmap" statementType="PREPARED">
+    	DELETE YMS_ELEMENT_YIELD
+    	WHERE FACTORYNAME = #{factoryName}
+    	  AND FACTORYDATE = #{factoryDate}
+    </delete>
+    <insert id="insertElemntYieldRaw" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO YMS_ELEMENT_YIELD
+	    VALUE
+	    SELECT B.FACTORYNAME,
+	           B.FACTORYDATE, 
+	           B.FACTORYWEEK,
+	           B.FACTORYMONTH,
+	           A.LOT_NO || '-' || A.TRAY_NO AS LOTNAME,
+	           A.WORK_SEQ,
+	           NVL(E.DISPO, A.DIV) AS DIV,
+	           C.PRODUCTSPECGROUP,
+	           A.ITEM_CODE AS PRODUCTSPECNAME,
+	           A.LINE_CODE AS LINECODE,
+	           TO_NUMBER(SUBSTR(LINE_CODE, 2, 3)) AS LINENO,
+	           D.DESCRIPTION AS LINENAME,
+	           A.ROUTE_TEXT AS STEPSEQ,
+	           NVL(A.EQUIP_CODE, '-') AS MACHINENAME,
+	           A.CREATE_DTTM,
+	           A.FINISH_DTTM,
+	           NVL(A.EMP_CODE, '-') AS EMPCODE,
+	           A.TR_ID,
+	           A.ORDER_NO,
+	           NVL(A.PROD_QTY, 0) PROD_QTY,
+	           NVL(A.DEFECT_QTY, 0) DEFECT_QTY,
+	           SYSDATE CREATETIME,
+	           SYSDATE UPDATETIME
+	    FROM POP_TB_ELEMENT_TRAY_ASSY A, 
+	         STD_CALENDAR B, 
+	         V_PRODUCTSPEC C,
+	         V_LINECODE D,
+	         POP_ERP_ORDER_ELEMENT E
+	    WHERE B.FACTORYNAME = #{factoryName}
+	      AND A.FINISH_DTTM IS NOT NULL
+	      AND A.FINISH_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(B.FACTORYDATE,'YYYYMMDDHH24MISS')) 
+	      						AND FN_GET_DAY_ENDTIME(TO_DATE(B.FACTORYDATE,'YYYYMMDDHH24MISS'))
+	      AND B.FACTORYDATE = #{factoryDate}
+	      AND A.ITEM_CODE = C.PRODUCTSPECNAME(+)
+	      AND A.DIV = C.DIV(+)
+	      AND A.LINE_CODE = D.LINECODE(+)
+	      AND A.LOT_NO = E.ZELOTNUM(+)
+	      AND A.ITEM_CODE = E.MATNR(+)
+    </insert>
+    <insert id="callElementYield" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call P_ELEMENT_YIELD
+    		(
+    			#{factoryName, mode=IN, jdbcType=VARCHAR},
+    			#{factoryDate, mode=IN, jdbcType=VARCHAR}
+    		)
+    	}
+    </insert>
+    <delete id="deleteTbSeperatorAssy" parameterType="hashmap" statementType="PREPARED">
+    	DELETE POP_TB_SEPERATOR_ASSY
+    	WHERE CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(#{startTime}, 'YYYYMMDD'))
+    						  AND FN_GET_DAY_ENDTIME(TO_DATE(#{endTime}, 'YYYYMMDD'))
+    </delete>
+	<insert id="insertTbSeperatorAssy" parameterType="hashmap" statementType="PREPARED">
+   	INSERT INTO POP_TB_SEPERATOR_ASSY
+	VALUE
+	SELECT ORDER_NO,
+	       ITEM_CODE,
+	       LINE_CODE,
+	       LOT_NO,
+	       TRAY_NO,
+	       EMP_CODE,
+	       DN_FLAG,
+	       BATCH_FLAG,
+	       BINNO,
+	       BINNAME,
+	       QTY,
+	       PROGRAM,
+	       BATCH_NO,
+	       EQUIP_CODE,
+	       CREATE_DTTM,
+	       ERP_IF_FLAG,
+	       ERP_IF_DTTM,
+	       ROW_STAMP,
+	       ZBNAME,
+	       CREATE_BY,
+	       FILENAME,
+	       DISPO,
+	       VERSION,
+	       LGORT,
+	       ZPASS,
+	       ZSCRAP,
+	       ZSPLI,
+	       DIV,
+	       COMBINE,
+	       OFFGRADE,
+	       COM_QTY,
+	       PAUSE_FLAG
+	  FROM TB_SEPERATOR_ASSY@POPDB
+      WHERE CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(#{startTime}, 'YYYYMMDD'))
+   						    AND FN_GET_DAY_ENDTIME(TO_DATE(#{endTime}, 'YYYYMMDD'))
+   </insert>
+   <delete id="deleteSeperatorYieldRaw" parameterType="hashmap" statementType="PREPARED">
+    	DELETE YMS_SEPERATOR_YIELD
+    	WHERE FACTORYNAME = #{factoryName}
+    	  AND FACTORYDATE = #{factoryDate}
+    </delete>
+    <insert id="insertSeperatorYieldRaw" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO YMS_SEPERATOR_YIELD
+	    VALUE
+	    SELECT B.FACTORYNAME,
+	           B.FACTORYDATE,
+	           B.FACTORYWEEK,
+	           B.FACTORYMONTH,
+	           A.LOT_NO || '-' || A.TRAY_NO AS LOTNAME,
+	           NVL(E.DISPO, A.DIV) AS DIV,
+	           C.PRODUCTSPECGROUP,
+	           A.ITEM_CODE AS PRODUCTSPECNAME,
+	           A.LINE_CODE AS LINECODE,
+	           TO_NUMBER(SUBSTR(A.LINE_CODE, 2, 3)) AS LINENO,
+	           D.DESCRIPTION AS LINENAME,
+	           'TT' AS STEPSEQ,
+	           NVL(A.EQUIP_CODE, '-') AS MACHINENAME,
+	           A.CREATE_DTTM,
+	           NVL(A.EMP_CODE, '-') AS EMPCODE,
+	           A.ROW_STAMP AS TR_ID,
+	           A.ORDER_NO,
+	           SUM(CASE WHEN ZPASS = 'Y' THEN QTY ELSE 0 END) AS PROD_QTY,
+	           SUM(CASE WHEN ZPASS = 'N' THEN QTY ELSE 0 END) AS DEFECT_QTY,
+	           SUM(CASE WHEN ZSCRAP IN ('515') THEN QTY ELSE 0 END) AS "등외",
+	           SUM(CASE WHEN ZSCRAP IN ('501') THEN QTY ELSE 0 END) AS "OPEN",
+	           SUM(CASE WHEN ZSCRAP IN ('507') THEN QTY ELSE 0 END) AS "ST1/ST2",
+	           SUM(CASE WHEN ZSCRAP IN ('504') THEN QTY ELSE 0 END) AS "VF",
+	           SUM(CASE WHEN ZSCRAP IN ('510') THEN QTY ELSE 0 END) AS "IR/VR",
+	           SUM(CASE WHEN ZSCRAP IN ('508') THEN QTY ELSE 0 END) AS "TOV",
+	           SUM(CASE WHEN ZSCRAP IN ('502') THEN QTY ELSE 0 END) AS "CIE",
+	           SUM(CASE WHEN ZSCRAP IN ('503') THEN QTY ELSE 0 END) AS "IV/LF",
+	           SUM(CASE WHEN ZSCRAP IN ('506') THEN QTY ELSE 0 END) AS "LMD/LMP",
+	           SUM(CASE WHEN ZSCRAP IN ('514') THEN QTY ELSE 0 END) AS "CRI",
+	           SUM(CASE WHEN ZSCRAP IN ('520') THEN QTY ELSE 0 END) AS "ETC",
+	           SUM(CASE WHEN ZSCRAP IN ('518') THEN QTY ELSE 0 END) AS "R9",
+	           SUM(CASE WHEN ZSCRAP IN ('523') THEN QTY ELSE 0 END) AS "2NDP/SUBP",
+	           SYSDATE CREATETIME,
+	           SYSDATE UPDATETIME
+	    FROM POP_TB_SEPERATOR_ASSY A, 
+	         STD_CALENDAR B, 
+	         V_PRODUCTSPEC C,
+	         V_LINECODE D,
+	         POP_ERP_ORDER_ELEMENT E
+	    WHERE B.FACTORYNAME = #{factoryName}
+	      AND A.CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(B.FACTORYDATE,'YYYYMMDDHH24MISS')) AND FN_GET_DAY_ENDTIME(TO_DATE(B.FACTORYDATE,'YYYYMMDDHH24MISS'))
+	      AND B.FACTORYDATE = #{factoryDate}
+	      AND A.ITEM_CODE = C.PRODUCTSPECNAME(+)
+	      AND A.DIV = C.DIV(+)
+	      AND A.LINE_CODE = D.LINECODE(+)
+	      AND A.LOT_NO = E.ZELOTNUM(+)
+	      AND A.ITEM_CODE = E.MATNR(+)
+	    GROUP BY A.LOT_NO || '-' || A.TRAY_NO,
+	           B.FACTORYNAME,
+	           B.FACTORYDATE,
+	           B.FACTORYWEEK,
+	           B.FACTORYMONTH,
+	           A.LINE_CODE,
+	           D.DESCRIPTION,
+	           NVL(E.DISPO, A.DIV),
+	           C.PRODUCTSPECGROUP,
+	           A.ITEM_CODE,
+	           A.CREATE_DTTM,
+	           A.EQUIP_CODE,
+	           A.EMP_CODE,
+	           A.ORDER_NO,
+	           A.ROW_STAMP
+    </insert>
+    <insert id="callSeperatorYield" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call P_SEPERATOR_YIELD
+    		(
+    			#{factoryName, mode=IN, jdbcType=VARCHAR},
+    			#{factoryDate, mode=IN, jdbcType=VARCHAR}
+    		)
+    	}
+    </insert>
+    <delete id="deleteTbTapingAssy" parameterType="hashmap" statementType="PREPARED">
+    	DELETE POP_TB_TAPPING_ASSY
+    	WHERE CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(#{startTime}, 'YYYYMMDD'))
+    						  AND FN_GET_DAY_ENDTIME(TO_DATE(#{endTime}, 'YYYYMMDD'))
+    </delete>
+	<insert id="insertTbTapingAssy" parameterType="hashmap" statementType="PREPARED">
+   	INSERT INTO POP_TB_TAPPING_ASSY
+	VALUE
+	SELECT TR_ID,
+          LOT_NO,
+          BATCH_NO,
+          DIV,
+          LINE_CODE,
+          ERP_CODE,
+          BATCH_QTY,
+          TARGET_RANK,
+          ITEM_CODE,
+          OTHER_RANK,
+          START_DTTM,
+          FINISH_DTTM,
+          EMP_CODE,
+          DN_FLAG,
+          STATUS_FLAG,
+          ERP_IF_FLAG,
+          ERP_IF_TIME,
+          CREATE_DTTM,
+          EQUIP_CODE,
+          REEL_EQUIP,
+          REEL_CNT,
+          REEL_QTY,
+          BATCH_DATE,
+          ORDER_NO,
+          MCD,
+          FLUX,
+          CIE,
+          VF,
+          SSC_LABEL_RANK,
+          PARTNO,
+          ERP_ERROR,
+          COMBINE,
+          PAIR_ID,
+          TOTAL,
+          Z_FLAG,
+          FILE_DTTM,
+          YMS_DTTM,
+          LV_PAIRNO,
+          LABEL_TYPE
+	  FROM TB_TAPPING_ASSY@POPDB
+      WHERE CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(#{startTime}, 'YYYYMMDD'))
+   						    AND FN_GET_DAY_ENDTIME(TO_DATE(#{endTime}, 'YYYYMMDD'))
+   </insert>
+   <delete id="deleteTapingYieldRaw" parameterType="hashmap" statementType="PREPARED">
+    	DELETE YMS_TAPING_YIELD
+    	WHERE FACTORYNAME = #{factoryName}
+    	  AND FACTORYDATE = #{factoryDate}
+    </delete>
+    <insert id="insertTapingYieldRaw" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO YMS_TAPING_YIELD
+	    VALUE
+	    SELECT B.FACTORYNAME, 
+	           B.FACTORYDATE,
+	           B.FACTORYWEEK,
+	           B.FACTORYMONTH,
+	           A.LOT_NO AS LOTNAME,
+	           E.BATCH_NO,
+	           A.DIV,
+	           C.PRODUCTSPECGROUP,
+	           A.ITEM_CODE AS PRODUCTSPECNAME,
+	           A.LINE_CODE AS LINECODE,
+	           TO_NUMBER(SUBSTR(A.LINE_CODE, 2, 3)) AS LINENO,
+	           D.DESCRIPTION AS LINENAME, 
+	           'TP' AS STEPSEQ,
+	           NVL(A.EQUIP_CODE, '-') AS MACHINENAME,
+	           A.START_DTTM,
+	           A.FINISH_DTTM,
+	           NVL(A.EMP_CODE, '-') AS EMPCODE,
+	           A.ORDER_NO,
+	           A.TR_ID,
+	           -- SUM(CASE WHEN E.ZPASS = 'Y' THEN QTY ELSE 0 END) AS PROD_QTY, 
+	           MAX(E.TOTAL_QTY) - SUM(CASE WHEN E.ZSCRAP IN ('513', 'ERR', 'OVE', 'UND', 'ETC') THEN QTY ELSE 0 END) - SUM(CASE WHEN E.ZSCRAP = '518' THEN QTY ELSE 0 END) AS PROD_QTY,
+	           SUM(CASE WHEN E.ZSCRAP IN ('513', 'ERR', 'OVE', 'UND', 'ETC') THEN QTY ELSE 0 END) AS DEFECT_QTY, 
+	           SUM(CASE WHEN E.ZSCRAP = '518' THEN QTY ELSE 0 END) AS "VISION NG",
+	           SUM(CASE WHEN E.ZSCRAP = '513' THEN QTY ELSE 0 END) AS "NG",
+	           SUM(CASE WHEN E.ZSCRAP = 'ERR' THEN QTY ELSE 0 END) AS "ERROR",
+	           SUM(CASE WHEN E.ZSCRAP = 'OVE' THEN QTY ELSE 0 END) AS "OVER",
+	           SUM(CASE WHEN E.ZSCRAP = 'UND' THEN QTY ELSE 0 END) AS "UNDER",
+	           SUM(CASE WHEN E.ZSCRAP = 'ETC' THEN QTY ELSE 0 END) AS "ETC",
+	           SYSDATE CREATETIME,
+	           SYSDATE UPDATETIME
+	    FROM POP_TB_TAPPING_ASSY A, 
+	         STD_CALENDAR B, 
+	         V_PRODUCTSPEC C, 
+	         V_LINECODE D,
+	         POP_TB_TAPPING_ASSY_DETAIL E
+	    WHERE B.FACTORYNAME = #{factoryName}
+	      AND E.CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(B.FACTORYDATE,'YYYYMMDDHH24MISS')) AND FN_GET_DAY_ENDTIME(TO_DATE(B.FACTORYDATE,'YYYYMMDDHH24MISS'))
+	      AND B.FACTORYDATE = #{factoryDate}
+	      AND A.ITEM_CODE = C.PRODUCTSPECNAME(+)
+	      AND A.DIV = C.DIV(+)
+	      AND A.BATCH_NO = E.BATCH_NO
+	      AND A.LINE_CODE = D.LINECODE
+	    GROUP BY B.FACTORYNAME,
+	           B.FACTORYDATE,
+	           B.FACTORYDATE,
+	           B.FACTORYWEEK,
+	           B.FACTORYMONTH,
+	           A.LOT_NO,
+	           E.BATCH_NO,
+	           A.LINE_CODE,
+	           D.DESCRIPTION,
+	           A.DIV,
+	           C.PRODUCTSPECGROUP,
+	           A.ITEM_CODE,
+	           A.EQUIP_CODE,
+	           A.EMP_CODE,
+	           A.ORDER_NO,
+	           A.TR_ID,
+	           A.START_DTTM,
+	           A.FINISH_DTTM
+    </insert>
+    <insert id="callTapingYield" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call P_TAPING_YIELD
+    		(
+    			#{factoryName, mode=IN, jdbcType=VARCHAR},
+    			#{factoryDate, mode=IN, jdbcType=VARCHAR}
+    		)
+    	}
+    </insert>
+</mapper>
