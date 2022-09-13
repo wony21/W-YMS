@@ -16,6 +16,9 @@
   <a id="a-menu" name="mn-ctq" class="item" href="/ctq">
 	CTQ
   </a>
+  <a id="a-menu" name="mn-popif" class="item" href="/popIF">
+	I/F
+  </a>
   <div class="right menu">
     <!-- <div class="item">
       <div class="ui icon input">
@@ -48,6 +51,8 @@ $(function(){
 			$("[name^=mn-calendar]").attr('class', 'item active');
 		} else if ( path == '/ctq' ) {
 			$("[name^=mn-ctq]").attr('class', 'item active');
+		} else if ( path == '/popIF' ) {
+			$("[name^=mn-popif]").attr('class', 'item active');
 		}
 	});
 	

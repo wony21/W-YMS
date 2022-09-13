@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.compact.base.common.api.ApiResponse;
@@ -35,6 +36,7 @@ public class CTQService {
 		return mapper.getList();
 	}
 	
+
 	public List getCTQData(String startDate, String endDate, String itemGroup, String itemCode, String testProv) {
 		Map<String, Object> param = new HashMap<String, Object>();
 		param.put("startDate", startDate);

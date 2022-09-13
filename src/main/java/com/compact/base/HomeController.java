@@ -150,6 +150,11 @@ public class HomeController {
 	public String calendar(Locale locale, Model model) {
 		return "calendar/calendar";
 	}
+	
+	@RequestMapping(value = "/popIF", method = RequestMethod.GET)
+	public String popIF(Locale locale, Model model) {
+		return "IF/popIF";
+	}
 
 	@RequestMapping(value = "/api/common/yield/ymsfilem", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
 	@ResponseBody

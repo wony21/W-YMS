@@ -32,7 +32,7 @@ public class CTQSchedulerVer211223 {
 
 	@Autowired
 	CTQService ctqService;
-	
+
 	@Value("${sch.ctq.daily.cron.enable:true}")
 	public Boolean isEnabled;
 
@@ -57,7 +57,7 @@ public class CTQSchedulerVer211223 {
 
 	@Value("${chart.api.server}")
 	String chartAPIServer;
-	
+
 	Boolean scheduleRunned = false;
 
 	public String getMapVal(Map data, String key) {
@@ -85,9 +85,9 @@ public class CTQSchedulerVer211223 {
 		String fileBody = FileUtils.readFileToString(resourceFile);
 		return fileBody;
 	}
-	
+
 	public String createTableHtml(int no, Map<String, Object> ctqData) {
-		
+
 		String site = getMapVal(ctqData, "site");
 		String ctqDate = getMapVal(ctqData, "ctqDate");
 		String itemGroup = getMapVal(ctqData, "itemGroup");
@@ -161,10 +161,10 @@ public class CTQSchedulerVer211223 {
 		trtd += String.format("<td>%s</td>", value20);
 		trtd += String.format("<td>%s</td>", ng);
 		trtd += "</tr>";
-		
+
 		return trtd;
 	}
-	
+
 	public String createChartLinkFilename(List<Map<String, Object>> ctqDataList) throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
 		String json = mapper.writeValueAsString(ctqDataList);
@@ -190,8 +190,7 @@ public class CTQSchedulerVer211223 {
 
 		if (responseCode == 200) {
 
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(connection.getInputStream()));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			StringBuffer stringBuffer = new StringBuffer();
 			String inputLine = "";
 
@@ -206,28 +205,34 @@ public class CTQSchedulerVer211223 {
 			Map<String, String> responseMap = mapper.readValue(response, Map.class);
 
 			fileName = responseMap.get("filename");
-			
+
 		} else {
 			logger.error("POST : Response Code [%d]. Error", responseCode);
 		}
 
 		return fileName;
-		
+
 	}
 
 	@Scheduled(cron = "${sch.ctq.daily.cron}")
 	public void SendMail() throws Exception {
-		
-		if( !isEnabled ) return;
-		
+
+		if (!isEnabled)
+			return;
+
+		if (scheduleRunned) {
+			logger.info("Schedule is running...(return)");
+			return;
+		}
+
 		// 중복 실행 방지
 		scheduleRunned = true;
-		
+
 		try {
-			
+
 			// CTQ Mail Group
 			logger.info("--- MAIL GROUP LIST ---");
-			
+
 			// 스케쥴 기준 정보 생성
 			Date today = new Date();
 			String mailDate = DateFormatUtils.format(today, "yyyyMMdd");
@@ -236,7 +241,7 @@ public class CTQSchedulerVer211223 {
 			// Mail template
 			StringBuffer htmlTemplete = new StringBuffer();
 			String mail_CSS = readFileFromResourceFile(mailTmplCSS);
-			
+
 			String mailTmplHtmlStr = readFileFromResourceFile(mailTmplHtml);
 
 			List<Map<String, String>> mailGroups = ctqService.getMailGroup();
@@ -257,34 +262,34 @@ public class CTQSchedulerVer211223 {
 				String testProvName = getMapVal(group, "testprovname");
 				String all = getMapVal(group, "allproduct");
 
-				logger.info(String.format("GROUPID[%s] SENDTYPE[%s] NGOPT[%s] ROWCOUNT[%s] HOUR[%s] MIN[%s]", groupId, sendType, onlyNG,
-						rowCount, runHour, runMin));
+				logger.info(String.format("GROUPID[%s] SENDTYPE[%s] NGOPT[%s] ROWCOUNT[%s] HOUR[%s] MIN[%s]", groupId,
+						sendType, onlyNG, rowCount, runHour, runMin));
 
 				// 스케쥴 지정 시간이 아니면 수행 종료
 				if (!isScheduleIsRunnableTime(runHour, runMin))
 					continue;
-				
+
 				List<Map<String, String>> mailItems = null;
 				logger.info(String.format("GROUPID[%s] ALL-PRODUCT-FLAG[%s]", groupId, all));
-				if ( all.equals("Y")) {
+				if (all.equals("Y")) {
 					mailItems = ctqService.getCTQALLProduct();
 				} else {
 					mailItems = ctqService.getMailItem(groupId);
 				}
-				
+
 				// Data 수집 Summary
-				
 
 				// 메일 아이템 ------
 				for (Map<String, String> item : mailItems) {
 
 					String productGroup = getMapVal(item, "productgroup");
 					String productSpecName = getMapVal(item, "productspecname");
-					
-					logger.info(String.format("TESTPROV[%s] TESTLOCATE[%s] PRODUCTGROUP[%s] PRODUCTSPECNAME[%s]", testProv, testLocate, productGroup, productSpecName));
 
-					List<Map<String, Object>> ctqDataList = 
-							ctqService.getCTQProductData(productGroup, productSpecName, testLocate, testProv, sendType, onlyNG);
+					logger.info(String.format("TESTPROV[%s] TESTLOCATE[%s] PRODUCTGROUP[%s] PRODUCTSPECNAME[%s]",
+							testProv, testLocate, productGroup, productSpecName));
+
+					List<Map<String, Object>> ctqDataList = ctqService.getCTQProductData(productGroup, productSpecName,
+							testLocate, testProv, sendType, onlyNG);
 
 					StringBuffer htmlTable = new StringBuffer();
 					StringBuffer htmlChartImage = new StringBuffer();
@@ -297,9 +302,10 @@ public class CTQSchedulerVer211223 {
 						// rowCount 존재시(= 0보다 클 경우), 최근데이터 순으로 데이터 표시
 						// rowCount 0 인 경우, 제한 없음 (0 보다 작게 입력해도 마찬가지)
 						if (rowCount > 0) {
-							//logger.info(String.format("ROWLIMIT[%d] DATACNT[%d] NO[%d]", rowCount, dataCount, no));
+							// logger.info(String.format("ROWLIMIT[%d] DATACNT[%d] NO[%d]", rowCount,
+							// dataCount, no));
 							if ((dataCount - rowCount + 1) <= no) {
-								//logger.info(String.format("INSERT HTML"));
+								// logger.info(String.format("INSERT HTML"));
 								htmlTable.insert(0, trtd);
 							}
 						} else {
@@ -307,7 +313,7 @@ public class CTQSchedulerVer211223 {
 						}
 						no = no + 1;
 					}
-					
+
 					// 메일 표/차트 생성
 					if (dataCount > 0) {
 						// Chart Image 생성
@@ -317,36 +323,39 @@ public class CTQSchedulerVer211223 {
 									"<div><img src=\"http://" + chartAPIServer + "/image/%s\" /></div>", fileName);
 							htmlChartImage.append(chartHtml);
 						}
-						// 차트+표 내용 생성 
+						// 차트+표 내용 생성
 						String strBuf = mailTmplHtmlStr.replace("<!--@@{TABLE}@@-->", htmlTable.toString());
 						strBuf = strBuf.replace("<!--@@{CHART}@@-->", htmlChartImage.toString());
 						htmlTemplete.append(strBuf);
 					} else {
 						logger.warn("[CTQDailyMail] No has data.");
 					}
-					
+
 				} // 메일 아이템
-				
+
 				// 메일발송처리 ----
 				if (htmlTemplete.length() > 0) {
 					// 메일 상단 메시지 생성
 					String topMessage = todayFormatStr + "자 자동 알람 메일 입니다.<br> ";
-					
-					//topMessage += "<b>본 메일은 개발 적용 테스트 메일 입니다</b>";
+
+					// topMessage += "<b>본 메일은 개발 적용 테스트 메일 입니다</b>";
 					if (rowCount > 0) {
 						topMessage += "설정된 표 데이터 행수 제한은 (" + rowCount + ") 입니다.<br>";
-					} 
+					}
 					topMessage += "(차트의 경우, 최대 측정 개수가 250개 초과인 경우, 최근 기준 250개까지 표시 됩니다.) <br>";
 					topMessage += String.format("[메일발송그룹명칭 : %s] <br>", groupName);
-					// topMessage += String.format("<b>CTQ 측정 데이터 : %s, %s, %s, %s</b>(0값 자동제외)<br>", productGroup, productSpecName, testLocateName, testProvName);
-					List<String> products = mailItems.stream().map(m -> m.get("productspecname")).collect(Collectors.toList());
+					// topMessage += String.format("<b>CTQ 측정 데이터 : %s, %s, %s, %s</b>(0값
+					// 자동제외)<br>", productGroup, productSpecName, testLocateName, testProvName);
+					List<String> products = mailItems.stream().map(m -> m.get("productspecname"))
+							.collect(Collectors.toList());
 					String topSumHtml = getSummaryHtml(testProv, testProvName, products, sendType, onlyNG);
 					htmlTemplete.insert(0, topSumHtml);
 					htmlTemplete.insert(0, "<div><p>" + topMessage + "</p></div>");
 					htmlTemplete.insert(0, mail_CSS);
 					// 생성된 메일 템플릿 DB 저장
 					int mailId = ctqService.getNextMailId();
-					ctqService.reserveSendMail(mailId, groupId, testLocateName, testProvName, mailDate, htmlTemplete.toString());
+					ctqService.reserveSendMail(mailId, groupId, testLocateName, testProvName, mailDate,
+							htmlTemplete.toString());
 					// 저장된 메일DB 발송
 					ctqService.requestMailSend(mailId);
 					logger.info("[CTQDailyMail] Send reservce mail.");
@@ -355,23 +364,24 @@ public class CTQSchedulerVer211223 {
 				}
 				// 초기화
 				htmlTemplete = new StringBuffer();
-				
+
 			} // 메일 그룹
-			
-		} catch(Exception e) {
+
+		} catch (Exception e) {
 			e.getStackTrace();
 		} finally {
-			// 중복 실행 방지 해제 
+			// 중복 실행 방지 해제
 			scheduleRunned = false;
 			logger.info("[CTQDailyMail] Scheduling END");
 		}
-		
+
 	}
-	
-	public String getSummaryHtml(String testProv, String testProvName, List<String> products, String optSum, String optNG) throws Exception {
-		
+
+	public String getSummaryHtml(String testProv, String testProvName, List<String> products, String optSum,
+			String optNG) throws Exception {
+
 		String mail_Summary = readFileFromResourceFile(mailSummaryTmplHtml);
-		
+
 		// th 생성
 		String tagSummaryHtml = "";
 		String smy_trth = "<th>" + testProvName + "</th>";
@@ -382,20 +392,21 @@ public class CTQSchedulerVer211223 {
 		for (String product : products) {
 
 			List<Map<String, String>> info = ctqService.getProductInfo(product);
-			
+
 			smy_trtd += "<tr>";
 			smy_trtd += "<td>" + product + "</td>";
 
 			if (info.size() > 0) {
-				
+
 				String productGroup = getMapVal(info.get(0), "itemGroup");
 				String productName = getMapVal(info.get(0), "itemName");
 
 				smy_trtd += "<td>" + productGroup + "</td>";
 				smy_trtd += "<td>" + productName + "</td>";
 
-				List<Map<String, String>> ctqProductCountList = ctqService.getCTQProductDataCount(product, testProv, optSum, optNG);
-				
+				List<Map<String, String>> ctqProductCountList = ctqService.getCTQProductDataCount(product, testProv,
+						optSum, optNG);
+
 				int rowCount = ctqProductCountList.size();
 				if (rowCount > 0) {
 					for (Map<String, String> productCountObj : ctqProductCountList) {
@@ -416,9 +427,9 @@ public class CTQSchedulerVer211223 {
 			smy_trtd += "</tr>";
 		}
 		mail_Summary = mail_Summary.replace("<!--@@{TABLE}@@-->", smy_trtd);
-		
+
 		return mail_Summary;
-		
+
 	}
 
 }

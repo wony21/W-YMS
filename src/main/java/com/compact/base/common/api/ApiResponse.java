@@ -27,41 +27,50 @@ public class ApiResponse {
 	@Setter
 	@JsonProperty("data")
 	public Object data;
+	@Getter
+	@Setter
+	@JsonProperty("duration")
+	public Long duration;
 
 	public ApiResponse() {
 
 	}
 
-	public ApiResponse(int code, String message, String error, String redirect, Object data) {
+	public ApiResponse(int code, String message, String error, String redirect, Object data, Long duration) {
 		this.status = code;
 		this.message = message;
 		this.error = error;
 		this.redirect = redirect;
 		this.data = data;
+		this.duration = duration;
 	}
 	
 	public static ApiResponse of(int code, String message) {
-		return new ApiResponse(code, message, null, null, null);
+		return new ApiResponse(code, message, null, null, null, null);
 	}
 
 	public static ApiResponse error(int code, String error) {
-		return new ApiResponse(code, null, error, null, null);
+		return new ApiResponse(code, null, error, null, null, null);
 	}
 
 	public static ApiResponse redirect(String redirect) {
-		return new ApiResponse(302, null, null, redirect, null);
+		return new ApiResponse(302, null, null, redirect, null, null);
 	}
 
 	public static ApiResponse success(String message) {
-		return new ApiResponse(200, message, null, null, null);
+		return new ApiResponse(200, message, null, null, null, null);
 	}
 	
 	public static ApiResponse success(String message, Object data) {
-		return new ApiResponse(200, message, null, null, data);
+		return new ApiResponse(200, message, null, null, data, null);
+	}
+	
+	public static ApiResponse success(String message, Long duration) {
+		return new ApiResponse(200, message, null, null, null, duration);
 	}
 	
 	public static ApiResponse error(String message) {
-		return new ApiResponse(500, null, message, null, null);
+		return new ApiResponse(500, null, message, null, null, null);
 	}
 
 }
