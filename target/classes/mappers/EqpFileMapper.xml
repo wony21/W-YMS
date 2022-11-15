@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.file.EqpFileMapper">
+    <select id="getFileList" parameterType="hashmap" resultType="com.compact.base.domain.file.dto.FileList" statementType="PREPARED">
+    	SELECT 'False' AS "selected",
+		         A.FMKEY AS "fmKey",
+		         A.LOTID as "lotId",
+		         P.DIV as "div",
+		         P.PRODUCTSPECGROUP as "productSpecGroup",
+		         A.PRODUCTSPECNAME as "partId",
+		         A.PROGRAM as "program",
+		         A.FILENAME as "fileName",
+		         A.SEQ as "slotNo",
+		         A.STEPSEQ as "stepSeq",
+		         A.STEPTYPE as "stepType",
+		         TO_CHAR(A.TKINTIME, 'YYYY-MM-DD HH24:MI:SS') AS "tkInTime",
+		         TO_CHAR(A.TKOUTTIME, 'YYYY-MM-DD HH24:MI:SS') AS "tkOutTime",
+		         M.DESCRIPTION AS "machineName",
+		         A.EQPID as "eqpId",
+		         B.TARGET as "target",
+		         B.CHIPSPEC as "chipSpec",
+		         B.INTENSITY as "intensity",
+		         B.PL as "pl",
+		         B.FRAMENAME as "frameName",
+		         B.MOLDMACHINENAME as "moldMachineName"
+		    FROM STD_CALENDAR S,
+		         YMS_FILEINDEX_10Y A,
+		         POP_LOT B,
+		         V_PRODUCTSPEC P,
+		         POP_MACHINESPEC M
+		   WHERE     S.FACTORYNAME = #{site}
+		         AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		         AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                             AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		         AND A.LOTID = B.LOTNAME(+)
+		         AND A.PRODUCTSPECNAME = P.PRODUCTSPECNAME(+)
+		         AND A.EQPID = M.MACHINENAME(+)
+		         <if test="stepSeqs != null">
+				  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				  		#{stepSeq}
+				  	</foreach>
+				  </if>
+				  <if test="divs != null">
+				  	<foreach item="div" index="i" collection="divs" open="AND P.DIV IN (" separator="," close=")">
+				  		#{div}
+				  	</foreach>
+				  </if>
+				  <if test="productGroups != null">
+			  		<foreach item="productGroup" index="i" collection="productGroups" open="AND P.PRODUCTSPECGROUP IN (" separator="," close=")">
+						#{productGroup}
+					</foreach>
+				 </if>
+				 <if test="productSpecNames != null">
+					  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND P.PRODUCTSPECNAME IN (" separator="," close=")">
+					  	#{productSpecName}
+					  </foreach>
+				  </if>
+				  <if test="programs != null">
+					  <foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+					  	#{program}
+					  </foreach>
+				  </if>
+				  <if test="lotIds != null">
+					  <foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+					  	#{lotId}
+					  </foreach>
+				  </if>
+				  <if test="lotLike != null">
+				  	AND A.LOTID LIKE #{lotLike} || '%'
+				  </if>
+				  <if test="targets != null">
+					  <foreach item="target" index="i" collection="targets" open="AND B.TARGET IN (" separator="," close=")">
+					  	#{target}
+					  </foreach>
+				  </if>
+				  <if test="chipSpecs != null">
+					  <foreach item="chipSpec" index="i" collection="chipSpecs" open="AND B.CHIPSPEC IN (" separator="," close=")">
+					  	#{chipSpec}
+					  </foreach>
+				  </if>
+				  <if test="frameNames != null">
+					  <foreach item="frameName" index="i" collection="frameNames" open="AND B.FRAMENAME IN (" separator="," close=")">
+					  	#{frameName}
+					  </foreach>
+				  </if>
+				  <if test="pls != null">
+					  <foreach item="pl" index="i" collection="pls" open="AND B.PL IN (" separator="," close=")">
+					  	#{pl}
+					  </foreach>
+				  </if>
+				  <if test="machineNames != null">
+					  <foreach item="machine" index="i" collection="machineNames" open="AND M.MACHINENAME IN (" separator="," close=")">
+					  	#{machine}
+					  </foreach>
+				  </if>
+		ORDER BY LOTID, TKINTIME
+    </select>
+    <select id="getFile10Y" parameterType="hashmap" resultType="com.compact.base.domain.file.dto.YMS_FILEINDEX_10Y" statementType="PREPARED">
+    	SELECT FMKEY
+			,SUBFMKEY
+			,LOTID
+			,SEQ
+			,FILENAME
+			,LOTNAME
+			,WAFERID
+			,STEPSEQ
+			,STEPTYPE
+			,TKINTIME
+			,TKOUTTIME
+			,EQPID
+			,DIV
+			,PRODUCTSPECGROUP
+			,PRODUCTSPECNAME
+			,PROGRAM
+			,REPLACE(SUBSTR(REMOTEFILENAME, 1, INSTR(REMOTEFILENAME, '\', -1)), '\', '/') AS PATH
+			,REPLACE(REMOTEFILENAME, '\', '/') AS REMOTEFILENAME
+			,STATUS
+			,ERRMSG
+			,BYTES
+		FROM YMS_FILEINDEX_10Y
+		<where>
+			<if test="fmKey != null">
+				AND FMKEY = #{fmKey}
+			</if>
+			<if test="fmKeys != null">
+				<foreach item="key" index="i" collection="fmKeys" open="AND FMKEY IN (" separator="," close=")">
+					#{key}
+				</foreach>
+			</if>
+		</where>
+		ORDER BY SUBFMKEY ASC
+    </select>
+    
+</mapper>

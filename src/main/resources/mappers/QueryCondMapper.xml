@@ -1,0 +1,862 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.base.domain.QueryCond.QueryCondMapper">
+    <select id="getStepSeq" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    	SELECT LIST AS DISPLAY, LIST AS VALUE
+    	FROM YMS_UI_OPTION
+    	WHERE CLASS1 = 'STEP'
+    	ORDER BY ORDEROPT ASC
+    </select>
+    
+    <select id="getStepType" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT STEPTYPE AS DISPLAY, STEPTYPE AS VALUE
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getSite" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT DESCRIPTION AS DISPLAY, FACTORYNAME AS VALUE
+		FROM POP_MESFACTORY A
+		WHERE 1=1
+		  AND RESOURCESTATE = 'InService'
+		  AND FACTORYTYPE = 'ProductionFactory'
+		ORDER BY FACTORYNAME ASC
+    </select>
+    
+    <select id="getLine" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT DIV AS DISPLAY, DIV AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S
+		WHERE S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC 
+    </select>
+    
+    <select id="getProductSpecGroup" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT PRODUCTSPECGROUP AS DISPLAY, PRODUCTSPECGROUP AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getProductSpecName" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT 
+		<choose>
+			<when test="opt != null and opt != ''">
+				DISTINCT A.PRODUCTSPECNAME AS VALUE, P.DESCRIPTION AS DISPLAY
+			</when>
+			<otherwise>
+				DISTINCT A.PRODUCTSPECNAME || '  ' || P.DESCRIPTION AS DISPLAY, A.PRODUCTSPECNAME AS VALUE
+			</otherwise>
+		</choose>
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     V_PRODUCTSPEC P
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND P.PRODUCTSPECNAME = A.PRODUCTSPECNAME
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getLOTID" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT A.LOTID AS DISPLAY, A.LOTID AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     V_PRODUCTSPEC P,
+		     POP_LOT L
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND P.PRODUCTSPECNAME = A.PRODUCTSPECNAME
+		  AND A.LOTID = L.LOTNAME(+)
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND L.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="intensities != null">
+			<foreach item="intensity" index="i" collection="intensities" open="AND L.INTENSITY IN (" separator="," close=")">
+				#{intensity}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND L.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND L.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getMachine" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT A.EQPID || '  ' || M.DESCRIPTION AS DISPLAY, A.EQPID AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     POP_MACHINESPEC M
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND A.EQPID IS NOT NULL
+		  AND A.EQPID = M.MACHINENAME
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getProgram" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT A.PROGRAM AS DISPLAY, A.PROGRAM AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND A.PROGRAM IS NOT NULL
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getTarget" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT L.TARGET AS DISPLAY, L.TARGET AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     POP_LOT L
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND A.LOTID = L.LOTNAME
+		  AND L.TARGET IS NOT NULL
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getChipSpec" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT L.CHIPSPEC AS DISPLAY, L.CHIPSPEC AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     POP_LOT L
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND A.LOTID = L.LOTNAME
+		  AND L.CHIPSPEC IS NOT NULL
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND L.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getIntensity" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT L.INTENSITY AS DISPLAY, L.INTENSITY AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     POP_LOT L
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND A.LOTID = L.LOTNAME
+		  AND L.INTENSITY IS NOT NULL
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND L.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="intensities != null">
+			<foreach item="intensity" index="i" collection="intensities" open="AND L.INTENSITY IN (" separator="," close=")">
+				#{intensity}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getFrameName" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT L.FRAMENAME AS DISPLAY, L.FRAMENAME AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     POP_LOT L
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND A.LOTID = L.LOTNAME
+		  AND L.FRAMENAME IS NOT NULL
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND L.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="intensities != null">
+			<foreach item="intensity" index="i" collection="intensities" open="AND L.INTENSITY IN (" separator="," close=")">
+				#{intensity}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND L.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getPL" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT L.PL AS DISPLAY, L.PL AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     POP_LOT L
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND A.LOTID = L.LOTNAME
+		  AND L.PL IS NOT NULL
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND L.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="intensities != null">
+			<foreach item="intensity" index="i" collection="intensities" open="AND L.INTENSITY IN (" separator="," close=")">
+				#{intensity}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND L.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND L.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getReelBatchID" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT A.LOTID AS DISPLAY, A.LOTID AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     STD_CALENDAR S,
+		     V_PRODUCTSPEC P,
+		     POP_PROCESSGROUP G
+		WHERE 1=1
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKOUTTIME BETWEEN TO_DATE (S.STARTTIME, 'YYYYMMDDHH24MISS')
+		                      AND TO_DATE (S.ENDTIME, 'YYYYMMDDHH24MISS')
+		  AND P.PRODUCTSPECNAME = A.PRODUCTSPECNAME
+		  AND A.LOTID = G.PROCESSGROUPNAME(+)
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND G.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    
+    
+</mapper>
