@@ -23,12 +23,12 @@
 		<property name="driverClassName" value="net.sf.log4jdbc.DriverSpy" />
 		<!-- <property name="url" value="jdbc:log4jdbc:sqlserver://update.imtsoft.me:61433;databaseName=PILATES" /> -->
 		<!-- <property name="url" value="jdbc:log4jdbc:mysql://localhost:3306/nara?serverTimezone=UTC" /> -->
-		<!-- <property name="url" value="jdbc:log4jdbc:oracle:thin:@192.168.32.51:1521:SSCYMS" />
+		<property name="url" value="jdbc:log4jdbc:oracle:thin:@192.168.32.51:1521:SSCYMS" />
 		<property name="username" value="sscymsusr" />
-		<property name="password" value="yms" /> -->
-		<property name="url" value="jdbc:log4jdbc:oracle:thin:@172.16.102.111:1521/vnmesdb" />
-		<property name="username" value="pkgymsusr" />
-		<property name="password" value="pkgymsusr123" />
+		<property name="password" value="yms" />
+		<!-- <property name="url" value="jdbc:log4jdbc:oracle:thin:@172.16.102.111:1521/vnmesdb" /> -->
+		<!-- <property name="username" value="pkgymsusr" /> -->
+		<!-- <property name="password" value="pkgymsusr123" /> -->
 	</bean>
 	
 	<bean id="transactionManager"

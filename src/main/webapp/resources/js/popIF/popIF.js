@@ -150,7 +150,7 @@ fnObj = {
 				if (result.status == 200) {
 					fnLog.addLog('[POPDB] > [YMSDB]',`TB_ELEMENT_TRAY_ASSY 데이터를 POP에서 정상적으로 가져왔습니다.(시작일: ${startFmt} 종료일: ${endFmt})`);
 				} else {
-					fnLog.addErrorLog('[POPDB] > [YMSDB]','TB_ELEMENT_TRAY_ASSY 데이터를 POP에서 가져오기를 실패하였습니다. <br />' + data.message);
+					fnLog.addErrorLog('[POPDB] > [YMSDB]','TB_ELEMENT_TRAY_ASSY 데이터를 POP에서 가져오기를 실패하였습니다. <br />' + result.message);
 					fnObj.setMode('end');
 					return false;
 				}

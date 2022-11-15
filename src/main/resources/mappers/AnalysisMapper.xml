@@ -4,7 +4,7 @@
     <select id="getFileLocation" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
     	SELECT B.LOTID AS LOT_ID,
     		   B.SEQ,
-    		   B.REMOTEFILENAME AS REMOTE_FILE_NAME,
+    		   REPLACE(B.REMOTEFILENAME, '\', '/') AS REMOTE_FILE_NAME,
     		   B.FILENAME AS FILE_NAME
 		FROM STD_CALENDAR A,
 		     YMS_FILEINDEX_10Y B,
@@ -17,7 +17,16 @@
 		  		#{stepSeq}
 		  	</foreach>
 		  </if>
-		  AND B.DIV = #{div}
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		  </if>
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND B.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
 		  <if test="productSpecGroups != null">
 			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND B.PRODUCTSPECGROUP IN (" separator="," close=")">
 			  	#{productSpecGroup}
@@ -55,6 +64,179 @@
 			  </foreach>
 		  </if>
 		ORDER BY B.LOTID, B.SEQ
+    </select>
+    <select id="getInfo" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.FileLocation" statementType="PREPARED">
+    	SELECT B.STEPSEQ,
+	         B.LOTID,
+	         TO_CHAR(B.TKINTIME, 'YYYYMMDDHH24MISS') AS TKINTIME,
+         	 TO_CHAR(B.TKOUTTIME, 'YYYYMMDDHH24MISS') AS TKOUTTIME,
+	         B.EQPID || '(' || M.DESCRIPTION || ')' AS EQPID,
+	         B.PRODUCTSPECNAME AS PARTID,
+	         B.EMPNO,
+	         B.PROGRAM,
+	         B.LOTTYPE,
+	         C.CHIPSPEC,
+	         C.FRAMENAME,
+	         C.TARGET,
+	         C.MOLDMACHINENAME,
+	         B.FMKEY,
+	         REPLACE(B.REMOTEFILENAME, '\', '/') AS REMOTEFILENAME,
+	         B.FILENAME
+	    FROM STD_CALENDAR A,
+	         YMS_FILEINDEX_10Y B,
+	         POP_LOT C,
+	         POP_MACHINESPEC M
+		WHERE 1=1
+		  AND A.FACTORYDATE BETWEEN #{startTime} AND #{endTime}
+		  AND B.TKOUTTIME BETWEEN TO_DATE(A.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(A.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND B.LOTID = C.LOTNAME
+		  AND B.EQPID = M.MACHINENAME
+		  <if test="stepSeqs != null">
+		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND B.STEPSEQ IN (" separator="," close=")">
+		  		#{stepSeq}
+		  	</foreach>
+		  </if>
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		  </if>
+		  <if test="divs != null">
+			  <foreach item="div" index="i" collection="divs" open="AND B.DIV IN (" separator="," close=")">
+			  	#{div}
+			  </foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND B.PRODUCTSPECGROUP IN (" separator="," close=")">
+			  	#{productSpecGroup}
+			  </foreach>
+		  </if>
+		  <if test="productSpecNames != null">
+			  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND B.PRODUCTSPECNAME IN (" separator="," close=")">
+			  	#{productSpecName}
+			  </foreach>
+		  </if>
+		  <if test="programs != null">
+			  <foreach item="program" index="i" collection="programs" open="AND B.PROGRAM IN (" separator="," close=")">
+			  	#{program}
+			  </foreach>
+		  </if>
+		  <if test="lotIds != null">
+			  <foreach item="lotId" index="i" collection="lotIds" open="AND B.LOTID IN (" separator="," close=")">
+			  	#{lotId}
+			  </foreach>
+		  </if>
+		  <if test="targets != null">
+			  <foreach item="target" index="i" collection="targets" open="AND C.TARGET IN (" separator="," close=")">
+			  	#{target}
+			  </foreach>
+		  </if>
+		  <if test="chipSpecs != null">
+			  <foreach item="chipSpec" index="i" collection="chipSpecs" open="AND C.CHIPSPEC IN (" separator="," close=")">
+			  	#{chipSpec}
+			  </foreach>
+		  </if>
+		  <if test="frameNames != null">
+			  <foreach item="frameName" index="i" collection="frameNames" open="AND C.FRAMENAME IN (" separator="," close=")">
+			  	#{frameName}
+			  </foreach>
+		  </if>
+		ORDER BY B.LOTID, B.SEQ
+    </select>
+    <select id="getMeasureItemNames" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.ItemName" statementType="PREPARED">
+    	SELECT DISTINCT B.ITEMNAME
+		  FROM STD_CALENDAR S, 
+		       YMS_FILEINDEX_10Y A, 
+		       YMS_MEASUREITEMNAME B,
+		       POP_LOT L
+		 WHERE S.FACTORYNAME = #{site}
+		    AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		    AND A.TKOUTTIME BETWEEN TO_DATE(S.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(S.ENDTIME,'YYYYMMDDHH24MISS')
+		    AND A.LOTID = L.LOTNAME
+		    AND A.FMKEY = B.FMKEY
+		    <!--  AND B.ITEMNAME NOT IN (SELECT ENUMVALUE FROM POP_ENUMDEFVALUE WHERE ENUMNAME = 'CIE-XY-NAME')
+		    AND B.ITEMNAME NOT IN (SELECT ENUMVALUE FROM POP_ENUMDEFVALUE WHERE ENUMNAME = 'CIE-BIN-NAME')
+		    AND B.ITEMNAME NOT IN (SELECT ENUMVALUE FROM POP_ENUMDEFVALUE WHERE ENUMNAME = 'CIE-NONDATA-NAME')
+		     -->
+		    <if test="stepSeqs != null">
+				<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+					#{stepSeq}
+				</foreach>
+			</if>
+			<if test="stepTypes != null">
+				<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+					#{stepType}
+				</foreach>
+			</if>
+			<if test="productionTypes != null">
+				<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+					#{productionType}
+				</foreach>
+			</if>
+			<if test="sites != null">
+				<foreach item="site" index="i" collection="sites" open="AND S.FACTORYNAME IN (" separator="," close=")">
+					#{site}
+				</foreach>
+			</if>
+			<if test="divs != null">
+				<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+					#{div}
+				</foreach>
+			</if>
+			<if test="productSpecGroups != null">
+				<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+					#{productSpecGroup}
+				</foreach>
+			</if>
+			<if test="productSpecNames != null">
+				<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+					#{productSpecName}
+				</foreach>
+			</if>
+			<if test="lotIds != null">
+				<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+					#{lotId}
+				</foreach>
+			</if>
+			<if test="lotText != null and lotText != ''">
+				AND A.LOTID LIKE #{lotText} || '%'
+			</if>
+			<if test="machines != null">
+				<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+					#{machine}
+				</foreach>
+			</if>
+			<if test="programs != null">
+				<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+					#{program}
+				</foreach>
+			</if>
+			<if test="targets != null">
+				<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+					#{target}
+				</foreach>
+			</if>
+			<if test="chipSpecs != null">
+				<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND L.CHIPSPEC IN (" separator="," close=")">
+					#{chipSpec}
+				</foreach>
+			</if>
+			<if test="intensities != null">
+				<foreach item="intensity" index="i" collection="intensities" open="AND L.INTENSITY IN (" separator="," close=")">
+					#{intensity}
+				</foreach>
+			</if>
+			<if test="frameNames != null">
+				<foreach item="frameName" index="i" collection="frameNames" open="AND L.FRAMENAME IN (" separator="," close=")">
+					#{frameName}
+				</foreach>
+			</if>
+			<if test="pls != null">
+				<foreach item="pl" index="i" collection="pls" open="AND L.PL IN (" separator="," close=")">
+					#{pl}
+				</foreach>
+			</if>
+		    ORDER BY ITEMNAME ASC
     </select>
     
 </mapper>

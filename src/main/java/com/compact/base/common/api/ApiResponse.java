@@ -25,6 +25,10 @@ public class ApiResponse {
 	public String redirect;
 	@Getter
 	@Setter
+	@JsonProperty("dataType")
+	public String dataType;
+	@Getter
+	@Setter
 	@JsonProperty("data")
 	public Object data;
 	@Getter
@@ -36,41 +40,50 @@ public class ApiResponse {
 
 	}
 
-	public ApiResponse(int code, String message, String error, String redirect, Object data, Long duration) {
+	public ApiResponse(int code, String message, String error, String redirect, String dataType, Object data, Long duration) {
 		this.status = code;
 		this.message = message;
 		this.error = error;
 		this.redirect = redirect;
+		this.dataType = dataType;
 		this.data = data;
 		this.duration = duration;
 	}
 	
 	public static ApiResponse of(int code, String message) {
-		return new ApiResponse(code, message, null, null, null, null);
+		return new ApiResponse(code, message, null, null, null, null, null);
 	}
 
 	public static ApiResponse error(int code, String error) {
-		return new ApiResponse(code, null, error, null, null, null);
+		return new ApiResponse(code, null, error, null, null, null, null);
 	}
 
 	public static ApiResponse redirect(String redirect) {
-		return new ApiResponse(302, null, null, redirect, null, null);
+		return new ApiResponse(302, null, null, redirect, null, null, null);
 	}
 
 	public static ApiResponse success(String message) {
-		return new ApiResponse(200, message, null, null, null, null);
+		return new ApiResponse(200, message, null, null, null, null, null);
 	}
 	
 	public static ApiResponse success(String message, Object data) {
-		return new ApiResponse(200, message, null, null, data, null);
+		return new ApiResponse(200, message, null, null, null, data, null);
+	}
+	
+	public static ApiResponse success(String message, String dataType, Object data) {
+		return new ApiResponse(200, message, null, null, dataType, data, null);
+	}
+	
+	public static ApiResponse success(String message, String dataType, Object data, Long duration) {
+		return new ApiResponse(200, message, null, null, dataType, data, duration);
 	}
 	
 	public static ApiResponse success(String message, Long duration) {
-		return new ApiResponse(200, message, null, null, null, duration);
+		return new ApiResponse(200, message, null, null, null, null, duration);
 	}
 	
 	public static ApiResponse error(String message) {
-		return new ApiResponse(500, null, message, null, null, null);
+		return new ApiResponse(500, null, message, null, null, null, null);
 	}
 
 }

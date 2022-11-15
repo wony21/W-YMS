@@ -2,6 +2,7 @@ package com.compact.base.domain.analysis;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +14,9 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPClientConfig;
+import org.apache.commons.net.ftp.FTPReply;
 import org.apache.poi.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +24,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.compact.base.common.BaseService;
 import com.compact.base.common.CamelCaseMap;
 import com.compact.base.domain.CTQ.CTQService;
 import com.compact.base.domain.analysis.DTO.ChartShareData;
+import com.compact.base.domain.analysis.DTO.FileLocation;
+import com.compact.base.domain.analysis.DTO.ItemName;
+import com.compact.base.domain.analysis.DTO.ShareReturnData;
+import com.compact.base.domain.analysis.DTO.TableShareData;
 import com.compact.base.domain.analysis.DTO.YieldFileData;
+import com.compact.base.domain.analysis.DTO.YieldFileInfoData;
 import com.compact.base.domain.analysis.DTO.YieldFileItemData;
+import com.compact.base.utils.FTPUtils;
 import com.hierynomus.msdtyp.AccessMask;
 import com.hierynomus.mssmb2.SMB2CreateDisposition;
 import com.hierynomus.mssmb2.SMB2ShareAccess;
@@ -34,8 +45,11 @@ import com.hierynomus.smbj.connection.Connection;
 import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
-public class AnalysisService {
+public class AnalysisService extends BaseService {
 
 	private static final Logger logger = LoggerFactory.getLogger(AnalysisService.class);
 
@@ -49,18 +63,17 @@ public class AnalysisService {
 //	nas.password=WkaQhdtnsenqn01!
 	@Value("${nas.host}")
 	String nasHost;
-
 	@Value("${nas.share.folder}")
 	String nasShareFolder;
-
 	@Value("${nas.user}")
 	String nasUser;
-
 	@Value("${nas.password}")
 	String nasPassword;
-
 	@Value("${local.download.path}")
 	String localDownloadPath;
+
+	@Autowired
+	FTPUtils ftpUtils;
 
 	/**
 	 * 수율 파일의 위치를 가져온다.
@@ -72,8 +85,8 @@ public class AnalysisService {
 	 * @param lotID           LOTID
 	 * @return
 	 */
-	public List getFileRemoteLocation(String div, String stepSeq, String productSpecName, String startTime, String endTime,
-			String lotID) {
+	public List getFileRemoteLocation(String div, String stepSeq, String productSpecName, String startTime,
+			String endTime, String lotID) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
 		/* single variant */
@@ -131,7 +144,40 @@ public class AnalysisService {
 		param.put("lotIds", lotID.isEmpty() ? null : lotIds);
 
 		return mapper.getFileLocation(param);
+	}
 
+	public List<FileLocation> getRemoteFile(String startDate, String endDate, String factoryName, String div,
+			String productionType, String stepSeq, String productSpecGroup, String productSpecName, String program,
+			String target, String chipSpec, String frameName, String pl, String lotID, String itemName) throws IOException {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.put("startTime", startDate);
+		parameter.put("endTime", endDate);
+		parameter.put("factoryName", factoryName);
+		setArrayParam(parameter, "divs", div);
+		setArrayParam(parameter, "productionTypes", productionType);
+		setArrayParam(parameter, "stepSeqs", stepSeq);
+		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
+		setArrayParam(parameter, "productSpecNames", productSpecName);
+		setArrayParam(parameter, "programs", program);
+		setArrayParam(parameter, "targets", target);
+		setArrayParam(parameter, "chipSpecs", chipSpec);
+		setArrayParam(parameter, "frameNames", frameName);
+		setArrayParam(parameter, "pls", pl);
+		setArrayParam(parameter, "lotIds", lotID);
+		List<FileLocation> list = mapper.getInfo(parameter);
+
+		logger.info("Start file downloading FileCount[{}]", list.size());
+		
+		ftpUtils.connect();
+		for(FileLocation fileInfo : list) {
+			String remoteFilePath = fileInfo.getRemoteFileName();
+			File file = ftpUtils.getFile(remoteFilePath);
+			fileInfo.setItemId(itemName);
+			fileInfo.setFile(file);
+		}
+		ftpUtils.disconnect();
+		
+		return list;
 	}
 
 	/**
@@ -189,12 +235,13 @@ public class AnalysisService {
 	 * @return
 	 * @throws Exception
 	 */
-	public List getYiedItemNames(String div, String stepSeq, String productSpecName, String startTime, String endTime, String lotID)
-			throws Exception {
+	public List getYiedItemNames(String div, String stepSeq, String productSpecName, String startTime, String endTime,
+			String lotID) throws Exception {
 
 		List<String> allItemNameValues = new ArrayList<String>();
 
-		List<CamelCaseMap> remoteFiles = this.getFileRemoteLocation(div, stepSeq, productSpecName, startTime, endTime, lotID);
+		List<CamelCaseMap> remoteFiles = this.getFileRemoteLocation(div, stepSeq, productSpecName, startTime, endTime,
+				lotID);
 
 		for (CamelCaseMap remoteFile : remoteFiles) {
 
@@ -384,6 +431,11 @@ public class AnalysisService {
 		List<CamelCaseMap> fileListInfo = this.getFileRemoteLocation(div, startTime, endTime, stepSeq, productSpecGroup,
 				productSpecName, program, target, chipSpec, frameName, lotID);
 
+		// FTP Connect
+		if (!ftpUtils.connect()) {
+			logger.error("FTP Connect Failed!!!");
+			return null;
+		}
 		for (CamelCaseMap remoteFileInfo : fileListInfo) {
 
 			String lotName = remoteFileInfo.getString("lotId");
@@ -391,43 +443,49 @@ public class AnalysisService {
 			String fileName = remoteFileInfo.getString("fileName");
 			String remoteFileName = remoteFileInfo.getString("remoteFileName");
 			// 파일 다운로드
-			File downloadFile = this.downloadRemoteFile(remoteFileName);
+			File downloadFile = ftpUtils.getFile(remoteFileName);
 
-			files.add(downloadFile);
+			if (downloadFile != null) {
+				files.add(downloadFile);
+			}
 		}
+		// FTP Disconnect
+		ftpUtils.disconnect();
 
 		logger.info("Download file count[{}]", new Object[] { files.size() });
 
 		// 데이터 파일 아이템별 합산 => 우선 1개 항목 => n개 처리
 		YieldFileItemData itemValueData = new YieldFileItemData();
-		
-		itemValueData.setItemName(itemFilterList.get(0));	// 1개 측정항목만 처리하자.
+
+		itemValueData.setItemName(itemFilterList.get(0)); // 첫번째 항목으로 아이템명 처리
 		itemValueData.setItemValue(new ArrayList<Double>());
-		
+
 		logger.info("Merge measure item[{}] value", new Object[] { itemValueData.getItemName() });
-		
+
 		for (File file : files) {
-			
+
 			logger.info("Merge filename[{}]", new Object[] { file.getName() });
 
 			List<Double> measureValues = AnalysisUtils.getItemValueList(file, itemValueData.getItemName());
 
 			itemValueData.getItemValue().addAll(measureValues);
 		}
-		
+
 		logger.info("Chip Total Count [{}]", itemValueData.getItemValue().size());
 
 		// 점유율 테이블 생성
 		logger.info("Create share table. [{}][{}][{}]", new Object[] { min, max, stepCount });
-		List<ChartShareData> shareLists = AnalysisUtils.createShareTable(min, max, stepCount, itemValueData.getItemName());
-		
+		List<ChartShareData> shareLists = AnalysisUtils.createShareTable(min, max, stepCount,
+				itemValueData.getItemName());
+
 		// 점유 Count 생성
-		// calculateChipCount
 		logger.info("Calculate Chip Count. [{}][{}][{}]", new Object[] { min, max, stepCount });
 		AnalysisUtils.calculateChipCount(shareLists, itemValueData.getItemValue());
+
+		// LOT (파일별) 점유율 산출
 		
-		// 점유율 산출
 		
+
 		// 파일 삭제
 		for (File file : files)
 			file.delete();
@@ -435,4 +493,72 @@ public class AnalysisService {
 		return shareLists;
 	}
 
+	/*****************************************************************************
+	 * 로직 재구현
+	 *****************************************************************************/
+	public List<ItemName> getMeasureItemNames(String startDate, String endDate, String factoryName, String div,
+			String stepSeq, String productionType, String productSpecGroup, String productSpecName, String program,
+			String target, String chipSpec, String frameName, String pl, String lotId, String itemName) {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.put("startDate", startDate);
+		parameter.put("endDate", endDate);
+		setArrayParam(parameter, "stepSeqs", stepSeq);
+		setArrayParam(parameter, "productionTypes", productionType);
+		setArrayParam(parameter, "sites", factoryName);
+		setArrayParam(parameter, "divs", div);
+		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
+		setArrayParam(parameter, "productSpecNames", productSpecName);
+		setArrayParam(parameter, "lotIds", lotId);
+		setArrayParam(parameter, "programs", program);
+		setArrayParam(parameter, "targets", target);
+		setArrayParam(parameter, "pls", pl);
+		return mapper.getMeasureItemNames(parameter);
+	}
+
+	public ShareReturnData calculatorShareData(String startDate, String endDate, String factoryName, String div,
+			String stepSeq, String productionType, String productSpecGroup, String productSpecName, String program,
+			String target, String chipSpec, String frameName, String pl, String lotId, String itemName, String rangeMinMaxTable) throws IOException {
+
+		List<FileLocation> fileInfos = this.getRemoteFile(startDate, endDate, factoryName, div, productionType, stepSeq, productSpecGroup, productSpecName, program, target, chipSpec, frameName, pl, lotId, itemName);
+		
+		int downloadFileSize = fileInfos.size();
+		
+		if ( downloadFileSize == 0) {
+			logger.error("download file count [{}]", downloadFileSize);
+		}
+		
+		// 점유율 테이블 생성
+		List<ChartShareData> shareLists = AnalysisUtils.parseMinMaxTable(rangeMinMaxTable, itemName);
+		logger.info("Create Share Limited Min~Max table data...OK");
+		
+		List<TableShareData> tableLists = new ArrayList<>();
+		YieldFileItemData itemValueData = new YieldFileItemData();
+		itemValueData.setItemName(itemName); // 첫번째 항목으로 아이템명 처리
+		itemValueData.setItemValue(new ArrayList<Double>());
+		for(FileLocation location : fileInfos) {
+			logger.info("Get Measuredata and ChipOfLot LOT[{}]",location.getLotId());
+			File file = location.getFile();
+			List<Double> measureValues = AnalysisUtils.getItemValueList(file, itemValueData.getItemName());
+			List<TableShareData> tableData = AnalysisUtils.calculatorChipCountOfLot(shareLists, location, measureValues);
+			tableLists.addAll(tableData);
+			itemValueData.getItemValue().addAll(measureValues);
+		}
+		logger.info("Chip Total Count [{}]", itemValueData.getItemValue().size());
+
+		// 점유 전체 Count 생성
+		AnalysisUtils.calculateChipCount(shareLists, itemValueData.getItemValue());
+		logger.info("Calculator ChipCount...OK");
+		
+		// 파일 삭제
+		for (FileLocation location : fileInfos) {
+			File file = location.getFile();
+			file.delete();
+		}
+		
+		ShareReturnData returnObj = new ShareReturnData();
+		returnObj.setChart(shareLists);
+		returnObj.setTable(tableLists);
+		
+		return returnObj;
+	}
 }

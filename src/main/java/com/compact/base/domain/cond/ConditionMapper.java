@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Mapper;
 public interface ConditionMapper {
 	
 	List getSite(Map<String, Object> parameter);
+	List getProductType(Map<String, Object> parameter);
 	List getLine(Map<String, Object> parameter);
 	List getStep(Map<String, Object> parameter);
 	List getProductSpecGroup(Map<String, Object> parameter);

@@ -26,6 +26,11 @@ public class ConditionService {
 		return mapper.getSite(param);
 	}
 
+	public List getProductType() {
+		Map<String, Object> param = new HashMap<String, Object>();
+		return mapper.getProductType(param);
+	}
+
 	public List getLine(String factoryName, String div) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
@@ -37,7 +42,7 @@ public class ConditionService {
 
 		return mapper.getLine(param);
 	}
-	
+
 	public List getStep(String factoryName) {
 		Map<String, Object> param = new HashMap<String, Object>();
 		/* single variant */
@@ -60,18 +65,17 @@ public class ConditionService {
 		return mapper.getProductSpecGroup(param);
 	}
 
-	public List getProduct(String factoryName, 
-						   String div, 
-						   String stepSeq, 
-						   String startTime, 
-						   String endTime, 
-						   String productGroup, 
-						   String product) {
+	public List getProduct(String factoryName, String div, String stepSeq, String productionType, String startTime, String endTime,
+			String productGroup, String product) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
 		/* single variant */
 		param.put("factoryName", factoryName);
 		param.put("stepSeq", stepSeq);
+		
+		String[] productionTypes = productionType.split(",");
+		param.put("productionTypes", productionType.isEmpty() ? null : productionTypes);
+		
 		param.put("startTime", startTime);
 		param.put("endTime", endTime);
 
@@ -79,7 +83,7 @@ public class ConditionService {
 		String[] divs = div.split(",");
 		param.put("divs", div.isEmpty() ? null : divs);
 
-		/* div array */
+		/* array */
 		String[] productGroups = productGroup.split(",");
 		param.put("productSpecGroups", productGroup.isEmpty() ? null : productGroups);
 
@@ -88,19 +92,15 @@ public class ConditionService {
 		return mapper.getProduct(param);
 	}
 
-	public List getProgram(String factoryName, 
-						   String div, 
-						   String stepSeq, 
-						   String startTime, 
-						   String endTime, 
-						   String productGroup, 
-						   String product, 
-						   String program) {
+	public List getProgram(String factoryName, String div, String stepSeq, String productionType, String startTime, String endTime,
+			String productGroup, String product, String program) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
 		/* single variant */
 		param.put("factoryName", factoryName);
 		param.put("stepSeq", stepSeq);
+		String[] productionTypes = productionType.split(",");
+		param.put("productionTypes", productionType.isEmpty() ? null : productionTypes);
 		param.put("startTime", startTime);
 		param.put("endTime", endTime);
 
@@ -118,20 +118,15 @@ public class ConditionService {
 		return mapper.getProgram(param);
 	}
 
-	public List getTarget(String factoryName, 
-						  String div, 
-						  String stepSeq, 
-						  String startTime, 
-						  String endTime, 
-						  String productGroup, 
-						  String product, 
-						  String program,
-						  String target) {
+	public List getTarget(String factoryName, String div, String stepSeq, String productionType, String startTime, String endTime,
+			String productGroup, String product, String program, String target) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
 		/* single variant */
 		param.put("factoryName", factoryName);
 		param.put("stepSeq", stepSeq);
+		String[] productionTypes = productionType.split(",");
+		param.put("productionTypes", productionType.isEmpty() ? null : productionTypes);
 		param.put("startTime", startTime);
 		param.put("endTime", endTime);
 
@@ -152,21 +147,15 @@ public class ConditionService {
 		return mapper.getTarget(param);
 	}
 
-	public List getChipSpec(String factoryName, 
-							String div, 
-							String stepSeq, 
-							String startTime, 
-							String endTime, 
-							String productGroup, 
-							String product, 
-							String program,
-							String target, 
-							String chipSpec) {
+	public List getChipSpec(String factoryName, String div, String stepSeq, String productionType, String startTime, String endTime,
+			String productGroup, String product, String program, String target, String chipSpec) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
 		/* single variant */
 		param.put("factoryName", factoryName);
 		param.put("stepSeq", stepSeq);
+		String[] productionTypes = productionType.split(",");
+		param.put("productionTypes", productionType.isEmpty() ? null : productionTypes);
 		param.put("startTime", startTime);
 		param.put("endTime", endTime);
 
@@ -190,22 +179,15 @@ public class ConditionService {
 		return mapper.getChipSpec(param);
 	}
 
-	public List getFrameName(String factoryName, 
-							 String div, 
-							 String stepSeq,
-							 String startTime, 
-							 String endTime, 
-							 String productGroup, 
-							 String product, 
-							 String program,
-							 String target, 
-							 String chipSpec, 
-							 String frameName) {
+	public List getFrameName(String factoryName, String div, String stepSeq, String productionType, String startTime, String endTime,
+			String productGroup, String product, String program, String target, String chipSpec, String frameName) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
 		/* single variant */
 		param.put("factoryName", factoryName);
 		param.put("stepSeq", stepSeq);
+		String[] productionTypes = productionType.split(",");
+		param.put("productionTypes", productionType.isEmpty() ? null : productionTypes);
 		param.put("startTime", startTime);
 		param.put("endTime", endTime);
 
@@ -220,7 +202,7 @@ public class ConditionService {
 
 		String[] programs = program.split(",");
 		param.put("programs", program.isEmpty() ? null : programs);
-		
+
 		String[] targets = target.split(",");
 		param.put("targets", target.isEmpty() ? null : targets);
 
@@ -230,23 +212,16 @@ public class ConditionService {
 
 	}
 
-	public List getLotIds(String factoryName, 
-						  String div, 
-						  String stepSeq, 
-						  String startTime, 
-						  String endTime, 
-						  String productGroup, 
-						  String product, 
-						  String program,
-						  String target, 
-						  String chipSpec, 
-						  String frameName, 
-						  String lotId) {
+	public List getLotIds(String factoryName, String div, String stepSeq, String productionType, String startTime, String endTime,
+			String productGroup, String product, String program, String target, String chipSpec, String frameName,
+			String lotId) {
 
 		Map<String, Object> param = new HashMap<String, Object>();
 
 		param.put("factoryName", factoryName);
 		param.put("stepSeq", stepSeq);
+		String[] productionTypes = productionType.split(",");
+		param.put("productionTypes", productionType.isEmpty() ? null : productionTypes);
 		param.put("startTime", startTime);
 		param.put("endTime", endTime);
 
@@ -258,10 +233,10 @@ public class ConditionService {
 
 		String[] products = product.split(",");
 		param.put("productSpecNames", product.isEmpty() ? null : products);
-		
+
 		String[] programs = program.split(",");
 		param.put("programs", program.isEmpty() ? null : programs);
-		
+
 		String[] targets = target.split(",");
 		param.put("targets", target.isEmpty() ? null : targets);
 

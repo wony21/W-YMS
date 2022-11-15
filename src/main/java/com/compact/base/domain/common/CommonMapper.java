@@ -17,5 +17,9 @@ public interface CommonMapper {
 	
 	public List getNotMappingOperations(Map<String, Object> parameter);
 	public List getProcessOperationSpec(Map<String, Object> parameter);
+	
+	
+	
+	
 
 }

@@ -12,6 +12,11 @@
     	</if>
     	ORDER BY FACTORYNAME ASC
     </select>
+    <select id="getProductType" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT ENUMVALUE AS VALUE, ENUMVALUE AS DISPLAY
+		FROM POP_ENUMDEFVALUE
+		WHERE ENUMNAME = 'ProductionType'
+    </select>
     <select id="getLine" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
     	SELECT LIST AS DESCRIPTION, 
     		   LIST AS DIV
@@ -36,7 +41,9 @@
     	SELECT DISTINCT PRODUCTSPECGROUP
     	FROM POP_PRODUCTSPEC
     	WHERE PRODUCTSPECGROUP IS NOT NULL
-    	  AND FACTORYNAME = #{factoryName}
+    	  <if test="factoryName != null and factoryName != ''">
+    	  	AND FACTORYNAME = #{factoryName}
+    	  </if>
     	  <if test="divs != null">
 			  <foreach item="div" index="i" collection="divs" open="AND DIV IN (" separator="," close=")">
 			  	#{div}
@@ -65,6 +72,11 @@
 		  		#{stepSeq}
 		  	</foreach>
 		  </if>
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		  <if test="divs != null">
 			  <foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
 			  	#{div}
@@ -104,12 +116,11 @@
 		  		#{stepSeq}
 		  	</foreach>
 		  </if>
-		  
-		  <if test="stepSeqs != null">
-		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
-		  		#{stepSeq}
-		  	</foreach>
-		  </if>
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		  <if test="productSpecGroups != null">
 			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
 			  	#{productSpecGroup}
@@ -142,6 +153,11 @@
 		  		#{stepSeq}
 		  	</foreach>
 		  </if>
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		  <if test="target != null and target != ''">
 		  	AND C.TARGET LIKE '%' || #{target} || '%'
 		  </if>
@@ -186,6 +202,11 @@
 		  		#{stepSeq}
 		  	</foreach>
 		  </if>
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		  <if test="chipSpec != null and chipSpec != ''">
 		  	AND C.CHIPSPEC LIKE '%' || #{chipSpec} || '%'
 		  </if>
@@ -236,6 +257,11 @@
 		  		#{stepSeq}
 		  	</foreach>
 		  </if>
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		  <if test="frameName != null and frameName != ''">
 		  	AND C.FRAMENAME LIKE '%' || #{frameName} || '%'
 		  </if>
@@ -290,6 +316,11 @@
 		  	<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
 		  		#{stepSeq}
 		  	</foreach>
+		  </if>
+		  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
 		  </if>
 		  <if test="lotId != null and lotId != ''">
 		  	AND A.LOTID LIKE '%' || #{lotId} || '%'

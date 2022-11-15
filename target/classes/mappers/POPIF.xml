@@ -42,7 +42,9 @@
 	           RE_FLAG,
 	           WORK_TIME,
 	           YMS_DTTM,
-	           WIP_FLAG
+	           WIP_FLAG,
+	           LOT_NO || '-' || TRAY_NO AS LOTID,
+          	   TO_CHAR(FINISH_DTTM, 'YYYYMMDD') AS YMD
 	      FROM TB_ELEMENT_TRAY_ASSY@POPDB
 	      WHERE CREATE_DTTM BETWEEN FN_GET_DAY_STARTTIME(TO_DATE(#{startTime}, 'YYYYMMDD'))
     						    AND FN_GET_DAY_ENDTIME(TO_DATE(#{endTime}, 'YYYYMMDD'))
