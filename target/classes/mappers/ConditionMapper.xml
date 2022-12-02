@@ -49,7 +49,7 @@
 			  	#{div}
 			  </foreach>
 		  </if>
-		  <if test="productSpecGroup != null and productSpecGroup != ''">
+		  <if test="productSpecGroup != null">
 		  	AND PRODUCTSPECGROUP LIKE '%' || #{productSpecGroup} || '%'
 		  </if>
 		  ORDER BY PRODUCTSPECGROUP ASC

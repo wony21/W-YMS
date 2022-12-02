@@ -1,6 +1,6 @@
 package com.compact.base.domain.analysis.DTO;
 
-import java.util.List;
+import java.awt.Point;
 
 import lombok.Data;
 import lombok.Getter;
@@ -9,14 +9,10 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class ShareReturnData {
+public class ShareDataObject {
 	
-	List chart;
+	Double itemValue;
 	
-	List<TableShareData> table;
-	
-	Boolean error;
-	
-	String errorMessage;
+	Point cieValue;
 	
 }

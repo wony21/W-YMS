@@ -2,9 +2,6 @@ package com.compact.base.domain.analysis.DTO;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -54,8 +51,8 @@ public class TableShareData {
 	
 	Long chipCnt;
 	
-	BigDecimal chipPer;
+	Double chipPer;
 	
-	Double value;
+	Long value;
 	
 }

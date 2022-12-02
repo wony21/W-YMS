@@ -18,7 +18,7 @@
 		  	</foreach>
 		  </if>
 		  <if test="productionTypes != null">
-			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND B.LOTTYPE IN (" separator="," close=")">
 				#{productionType}
 			</foreach>
 		  </if>
@@ -97,7 +97,7 @@
 		  	</foreach>
 		  </if>
 		  <if test="productionTypes != null">
-			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND B.LOTTYPE IN (" separator="," close=")">
 				#{productionType}
 			</foreach>
 		  </if>
@@ -238,5 +238,176 @@
 			</if>
 		    ORDER BY ITEMNAME ASC
     </select>
-    
+    <select id="getSeperatorCIE" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.SeperatorData" statementType="PREPARED">
+    	SELECT MATNR AS PARTID, ZTEPG AS PROGRAM, CIE, X1, Y1, X2, Y2, X3, Y3, X4, Y4
+		FROM POP_ERP_SEPERATOR_CIE
+		WHERE WERKS = #{factoryName}
+		  AND ZTEPG = #{program}
+		  AND MATNR = #{productSpecName}
+		ORDER BY CIE ASC
+    </select>
+    <select id="getCieXYItemName" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.CieNameInfo" statementType="PREPARED">
+    	SELECT MAX(CASE WHEN DEFAULTFLAG = 'X' THEN ENUMVALUE END) CIEX,
+		       MAX(CASE WHEN DEFAULTFLAG = 'Y' THEN ENUMVALUE END) CIEY
+		FROM POP_ENUMDEFVALUE
+		WHERE ENUMNAME = 'CIE-XY-NAME'
+		  AND 
+		  <foreach item="cieX" index="i" collection="cieXArr" open="(ENUMVALUE IN (" separator="," close=")">
+			  #{cieX}
+		  </foreach>
+		  <foreach item="cieY" index="i" collection="cieYArr" open="OR ENUMVALUE IN (" separator="," close=")">
+			  #{cieY}
+		  </foreach>
+          )
+    </select>
+    <insert id="addHistory" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO YMS_ANAL_HISTORY (KEY, SAVETYPE, FACTORYNAME, DIV, STARTDT, ENDDT, STEPSEQ, LOTTYPE, PRODUCTSPECGROUP, PRODUCTSPECNAME, PROGRAM, TARGET, CHIPSPEC, FRAMENAME, INTENSITY, PL, LOTID, SUBFRAMENAME, CREATETIME, FILEPATH, BYTES, USERID)
+    	VALUES (#{key}, #{saveType}, #{factoryName}, #{div}, #{startDate}, #{endDate}, #{stepSeq}, #{lotType}, #{productSpecGroup}, #{productSpecName}, #{program}, #{target}, #{chipSpec}, #{frameName}, #{intensity}, #{pl}, #{lotId}, #{subFrameName}, SYSDATE, #{filePath}, ${bytes}, #{userId})
+    </insert>
+    <select id="getHistory" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.RunHistoryData" statementType="PREPARED">
+	    SELECT KEY,
+	       FACTORYNAME,
+	       DIV,
+	       STARTDT,
+	       ENDDT,
+	       STEPSEQ,
+	       LOTTYPE,
+	       PRODUCTSPECGROUP,
+	       PRODUCTSPECNAME,
+	       PROGRAM,
+	       TARGET,
+	       CHIPSPEC,
+	       FRAMENAME,
+	       INTENSITY,
+	       PL,
+	       LOTID,
+	       USERID,
+	       TO_CHAR (CREATETIME, 'YYYY-MM-DD HH24:MI:SS') AS CREATETIME,
+	       TO_CHAR(BYTES, 'FM999,999,999,999') AS BYTES,
+	       COMMENTS
+	  FROM YMS_ANAL_HISTORY
+	 WHERE SAVETYPE = 'Share'
+	   AND DELYN = 'N'
+	 <if test='userId != "yms"'>
+	 	AND (KEY IN (SELECT KEY FROM YMS_ANAL_HISTORY_SHARE WHERE USERID = #{userId}) OR USERID = #{userId})
+	 </if>
+	 <choose>
+	 	<when test='optSaveDate == "1"'>
+	 		AND TRUNC(CREATETIME) BETWEEN #{startDate} AND #{endDate}
+	 	</when>
+	 	<otherwise>
+	 		<![CDATA[
+	 		AND STARTDT >= #{startDate}
+	 		AND ENDDT <= #{endDate}
+	 		]]>
+	 	</otherwise>
+	 </choose>
+	 <if test="cond1 != null and cond1 != ''">
+	 	AND ${cond1Column} LIKE '%' || #{cond1Value} || '%'
+	 </if>
+	 <if test="cond2 != null and cond2 != ''">
+	 	AND ${cond2Column} LIKE '%' || #{cond2Value} || '%'
+	 </if>
+	 <if test="cond3 != null and cond3 != ''">
+	 	AND ${cond3Column} LIKE '%' || #{cond3Value} || '%'
+	 </if>
+	 <if test="cond4 != null and cond4 != ''">
+	 	AND ${cond4Column} LIKE '%' || #{cond4Value} || '%'
+	 </if>
+	 <if test="cond5 != null and cond5 != ''">
+	 	AND ${cond5Column} LIKE '%' || #{cond5Value} || '%'
+	 </if>
+	 <if test="cond6 != null and cond6 != ''">
+	 	AND ${cond6Column} LIKE '%' || #{cond6Value} || '%'
+	 </if>
+	 <if test="cond7 != null and cond7 != ''">
+	 	AND ${cond7Column} LIKE '%' || #{cond7Value} || '%'
+	 </if>
+	 <if test="cond8 != null and cond8 != ''">
+	 	AND ${cond8Column} LIKE '%' || #{cond8Value} || '%'
+	 </if>
+    </select>
+    <select id="getHistoryOnKey" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.RunHistoryData" statementType="PREPARED">
+    	SELECT KEY,
+	       FACTORYNAME,
+	       DIV,
+	       STARTDT,
+	       ENDDT,
+	       STEPSEQ,
+	       LOTTYPE,
+	       PRODUCTSPECGROUP,
+	       PRODUCTSPECNAME,
+	       PROGRAM,
+	       TARGET,
+	       CHIPSPEC,
+	       FRAMENAME,
+	       INTENSITY,
+	       PL,
+	       LOTID,
+	       USERID,
+	       FILEPATH,
+	       TO_CHAR (CREATETIME, 'YYYY-MM-DD HH24:MI:SS') AS CREATETIME,
+	       TO_CHAR(BYTES, 'FM999,999,999,999') AS BYTES,
+	       COMMENTS
+	  FROM YMS_ANAL_HISTORY
+	  <where>
+	  	<if test='key != null and key != ""'>
+	  		AND KEY = #{key}
+	  	</if>
+	  	<if test='userId != null and userId != ""'>
+	  		AND USERID = #{userId}
+	  	</if>
+	  </where>
+    </select>
+    <update id="setHistoryMemo" parameterType="hashmap" statementType="PREPARED">
+    	UPDATE YMS_ANAL_HISTORY
+    	SET COMMENTS = #{comments}
+    	WHERE KEY = #{key}
+    </update>
+    <select id="getAllUserListForShare" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.ShareUserListData" statementType="PREPARED">
+    	SELECT USERID, USERNAME, DEPARTMENT_DESC AS DEPARTMENTNAME
+    	FROM POP_USERPROFILE
+    	WHERE STATUS IN ('1', '2')
+    	  AND YMS_USE = 'Y'
+    	  <if test='filter != null and filter != ""'>
+    	  	AND (USERID LIKE '%' || #{filter} || '%'
+    	  	 OR USERNAME LIKE '%' || #{filter} || '%'
+    	  	 OR DEPARTMENT_DESC LIKE '%' || #{filter} || '%')
+    	  </if>
+		ORDER BY DEPARTMENT, USERID ASC
+    </select>
+    <select id="getShareUserLists" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.ShareUserListData" statementType="PREPARED">
+    	SELECT A.USERID, B.USERNAME, B.DEPARTMENT_DESC AS DEPARTMENTNAME
+    	FROM YMS_ANAL_HISTORY_SHARE A,
+    	     POP_USERPROFILE B
+		WHERE A.KEY = #{key}
+		  AND A.USERID = B.USERID
+		ORDER BY B.DEPARTMENT, A.USERID ASC
+    </select>
+    <delete id="deleteHistoryShare" parameterType="hashmap" statementType="PREPARED">
+    	DELETE YMS_ANAL_HISTORY_SHARE
+    	WHERE KEY = #{key}
+    	<if test='userId != null and userId != ""'>
+    		AND USERID = #{userId}
+    	</if>
+    </delete>
+    <insert id="shareHistory" parameterType="hashmap" statementType="PREPARED">
+    	MERGE INTO YMS_ANAL_HISTORY_SHARE A
+    	USING DUAL B
+    	ON (A.KEY = #{key}
+    	AND A.USERID = #{userId})
+    	WHEN NOT MATCHED THEN
+    	INSERT (KEY, USERID, CREATETIME, UPDATETIME)
+    	VALUES (#{key}, #{userId}, SYSDATE, SYSDATE)
+    </insert>
+    <update id="setShareHistoryFlag" parameterType="hashmap" statementType="PREPARED">
+    	UPDATE YMS_ANAL_HISTORY
+    	SET SHAREYN =  #{shared}
+    	WHERE KEY = #{key}
+    </update>
+    <update id="deleteHistory" parameterType="hashmap" statementType="PREPARED">
+    	UPDATE YMS_ANAL_HISTORY
+    	SET DELYN = #{delYn}
+    	WHERE KEY = #{key}
+    </update>
 </mapper>

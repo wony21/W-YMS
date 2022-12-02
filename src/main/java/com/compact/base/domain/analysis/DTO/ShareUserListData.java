@@ -1,7 +1,5 @@
 package com.compact.base.domain.analysis.DTO;
 
-import java.util.List;
-
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,14 +7,12 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class ShareReturnData {
+public class ShareUserListData {
+
+	String userId;
 	
-	List chart;
+	String userName;
 	
-	List<TableShareData> table;
-	
-	Boolean error;
-	
-	String errorMessage;
+	String departmentName; 
 	
 }

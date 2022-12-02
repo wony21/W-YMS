@@ -1,5 +1,6 @@
 package wyms;
 
+import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -131,7 +132,7 @@ public class NetworkDictoryTest {
 
 	}
 
-	@Test
+	// @Test
 	public void FTPConnectTest() {
 
 		FTPClient ftp = new FTPClient();
@@ -290,6 +291,27 @@ public class NetworkDictoryTest {
 
 		FileUtils.writeLines(outputFile, mergeData);
 
+	}
+	
+	@Test
+	public void RectangleIn() {
+		
+		double x1 = 0;
+		double y1 = 0;
+		double x2 = 0;
+		double y2 = 0;
+		double x3 = 0;
+		double y3 = 0;
+		double x4 = 0;
+		double y4 = 0;
+		
+		double posX = 0;
+		double posY = 0;
+		
+		java.awt.Rectangle rect = new Rectangle();
+		
+		
+		
 	}
 
 }

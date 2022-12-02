@@ -1,10 +1,12 @@
 package com.compact.base.utils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPFile;
@@ -13,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 @Component
 public class FTPUtils {
@@ -28,8 +29,10 @@ public class FTPUtils {
 	String ftpUser;
 	@Value("${nas.ftp.password}")
 	String ftpPassword;
-	@Value("${nas.ftp.tmp.path")
+	@Value("${nas.ftp.tmp.path}")
 	String ftpTempPath;
+	@Value("${nas.ftp.save.path}")
+	String ftpSavePath;
 
 	FTPClient ftp;
 
@@ -64,13 +67,14 @@ public class FTPUtils {
 	public File getFile(String remotePath) throws IOException {
 
 		logger.info("FTP : Request find file[{}]", remotePath);
-		
+
 		FTPFile[] files = ftp.listFiles(remotePath);
 		logger.info("FTP: Flie Count [{}]", files.length);
 		if (files.length == 0) {
 			return null;
 		}
 		File tmpFile = File.createTempFile("tmp_", ".csv");
+		logger.info("TEMP:[{}]", tmpFile.getName());
 		FileOutputStream outputStream = new FileOutputStream(tmpFile);
 		outputStream.flush();
 		ftp.setBufferSize(4096);
@@ -87,14 +91,40 @@ public class FTPUtils {
 		}
 	}
 
-	public void disconnect() throws IOException {
-
-		if (ftp != null) {
-			if (ftp.isConnected()) {
-				ftp.logout();
-				ftp.disconnect();
+	public void disconnect() {
+		try {
+			if (ftp != null) {
+				if (ftp.isConnected()) {
+					ftp.logout();
+					ftp.disconnect();
+				}
 			}
+		} catch (Exception e) {
 		}
+	}
+
+	public boolean exist(String path) throws IOException {
+		FTPFile[] ftpFiles = ftp.listDirectories(path);
+		return ftpFiles.length > 0;
+	}
+
+	public void makeDirectory(String path) throws IOException {
+		ftp.makeDirectory(path);
+	}
+
+	public Boolean upload(String uploadPath, File file) throws IOException {
+		FileInputStream fis = new FileInputStream(file);
+		try {
+			ftp.enterLocalPassiveMode();
+			ftp.setFileType(FTP.BINARY_FILE_TYPE);
+			ftp.changeWorkingDirectory(uploadPath);
+			return ftp.storeFile(file.getName(), fis);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			fis.close();
+		}
+		return false;
 	}
 
 }

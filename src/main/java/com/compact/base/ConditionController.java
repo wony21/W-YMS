@@ -162,9 +162,9 @@ public class ConditionController extends BaseController {
 			@RequestParam(required = false) String pl) {
 
 		if ("stepSeq".equals(type)) {
-			return condService.getStepSeq(startDate, endDate);
+			return condService.getStepSeq(startDate, endDate, stepSeq);
 		} else if ("stepType".equals(type)) {
-			return condService.getStepType(startDate, endDate, stepSeq);
+			return condService.getStepType(startDate, endDate, stepSeq, "");
 		} else if ("site".equals(type)) {
 			return condService.getSite();
 		} else if ("div".equals(type)) {
@@ -176,8 +176,12 @@ public class ConditionController extends BaseController {
 		} else if ("productSpecNameTypeA".equals(type)) {
 			return condService.getProductSpecNameTypeA(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName);
 		} else if ("lotId".equals(type)) {
+			/*
 			return condService.getLOTID(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
 					productSpecName, lotID);
+			*/
+			return condService.getLOTID(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName,
+					lotID, lotText, machine, program, target, chipSpec, frameName, pl);
 		} else if ("machine".equals(type)) {
 			return condService.getMachine(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
 					productSpecName, lotID, lotText, machine);

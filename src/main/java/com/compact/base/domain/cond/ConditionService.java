@@ -60,7 +60,7 @@ public class ConditionService {
 		String[] divs = div.split(",");
 		param.put("divs", div.isEmpty() ? null : divs);
 
-		param.put("productGroup", productGroup);
+		param.put("productSpecGroup", productGroup);
 
 		return mapper.getProductSpecGroup(param);
 	}

@@ -58,4 +58,8 @@ public class CommonData {
 		public final String[] Silver4NameFilter = {"SILVER4", "Silver4" };
 		
 	}
+	
+	public class SuperUser {
+		public final static String Id = "yms";
+	}
 }

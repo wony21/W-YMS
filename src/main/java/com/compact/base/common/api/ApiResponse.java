@@ -78,6 +78,10 @@ public class ApiResponse {
 		return new ApiResponse(200, message, null, null, dataType, data, duration);
 	}
 	
+	public static ApiResponse error(String message, String dataType, Object data, Long duration) {
+		return new ApiResponse(500, null, message, null, dataType, data, duration);
+	}
+	
 	public static ApiResponse success(String message, Long duration) {
 		return new ApiResponse(200, message, null, null, null, null, duration);
 	}

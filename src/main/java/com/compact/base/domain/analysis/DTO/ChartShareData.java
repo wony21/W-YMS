@@ -15,6 +15,8 @@ public class ChartShareData {
 	
 	String rangeDescription;
 	
+	Integer sort;
+	
 	double min;
 	
 	double max;
@@ -23,6 +25,6 @@ public class ChartShareData {
 	
 	Long chipCount;
 	
-	BigDecimal chipPercent;
+	Double chipPercent;
 	
 }

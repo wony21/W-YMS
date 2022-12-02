@@ -33,20 +33,22 @@ public class QueryCondService extends BaseService {
 	/*****************************************************************
 	 * 장기 데이터용 파일 조회 조건 / 2022.10.25
 	 *****************************************************************/
-	public ApiResponse getStepSeq(String startDate, String endDate) {
+	public ApiResponse getStepSeq(String startDate, String endDate, String stepSeq) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("startDate", startDate);
 		parameter.put("endDate", endDate);
+		parameter.put("stepSeq", stepSeq);
 		List<SearchCondObj> list = mapper.getStepSeq(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
 	}
 
-	public ApiResponse getStepType(String startDate, String endDate, String stepSeq) {
+	public ApiResponse getStepType(String startDate, String endDate, String stepSeq, String stepType) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("startDate", startDate);
 		parameter.put("endDate", endDate);
 		setArrayParam(parameter, "stepSeqs", stepSeq);
+		parameter.put("stepType", stepType);
 		List<SearchCondObj> list = mapper.getStepType(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -77,7 +79,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "stepSeqs", stepSeq);
 		setArrayParam(parameter, "sites", site);
 		setArrayParam(parameter, "divs", line);
-		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
+		//setArrayParam(parameter, "productSpecGroups", productSpecGroup);
+		parameter.put("productSpecGroup", productSpecGroup);
 		List<SearchCondObj> list = mapper.getProductSpecGroup(parameter);
 		//preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -94,7 +97,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "sites", site);
 		setArrayParam(parameter, "divs", line);
 		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
-		setArrayParam(parameter, "productSpecNames", productSpecName);
+		//setArrayParam(parameter, "productSpecNames", productSpecName);
+		parameter.put("productSpecName", productSpecName);
 		List<SearchCondObj> list = mapper.getProductSpecName(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -110,7 +114,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "sites", site);
 		setArrayParam(parameter, "divs", line);
 		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
-		setArrayParam(parameter, "productSpecNames", productSpecName);
+		//setArrayParam(parameter, "productSpecNames", productSpecName);
+		parameter.put("productSpecName", productSpecName);
 		setArrayParam(parameter, "opt", "1");
 		List<SearchCondObj> list = mapper.getProductSpecName(parameter);
 //		preSettingList(list);
@@ -128,7 +133,7 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "divs", line);
 		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
 		setArrayParam(parameter, "productSpecNames", productSpecName);
-		setArrayParam(parameter, "lotIds", lot);
+		setArrayParam(parameter, "lotId", lot);
 		List<SearchCondObj> list = mapper.getLOTID(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -147,7 +152,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
 		setArrayParam(parameter, "productSpecNames", productSpecName);
 		setArrayParam(parameter, "lotIds", lots);
-		setArrayParam(parameter, "machines", machine);
+		//setArrayParam(parameter, "machines", machine);
+		parameter.put("machine", machine);
 		List<SearchCondObj> list = mapper.getMachine(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -167,7 +173,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "productSpecNames", productSpecName);
 		setArrayParam(parameter, "lotIds", lots);
 		setArrayParam(parameter, "machines", machine);
-		setArrayParam(parameter, "programs", program);
+		//setArrayParam(parameter, "programs", program);
+		parameter.put("program", program);
 		List<SearchCondObj> list = mapper.getProgram(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -189,7 +196,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "lotIds", lots);
 		setArrayParam(parameter, "machines", machine);
 		setArrayParam(parameter, "programs", program);
-		setArrayParam(parameter, "targets", target);
+		//setArrayParam(parameter, "targets", target);
+		parameter.put("target", target);
 		List<SearchCondObj> list = mapper.getTarget(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -212,7 +220,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "machines", machine);
 		setArrayParam(parameter, "programs", program);
 		setArrayParam(parameter, "targets", target);
-		setArrayParam(parameter, "chipSpecs", chipSpec);
+		//setArrayParam(parameter, "chipSpecs", chipSpec);
+		parameter.put("chipSpec", chipSpec);
 		List<SearchCondObj> list = mapper.getChipSpec(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -236,7 +245,8 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "programs", program);
 		setArrayParam(parameter, "targets", target);
 		setArrayParam(parameter, "chipSpecs", chipSpec);
-		setArrayParam(parameter, "frameNames", frameName);
+		//setArrayParam(parameter, "frameNames", frameName);
+		parameter.put("frameName", frameName);
 		List<SearchCondObj> list = mapper.getFrameName(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
@@ -261,8 +271,36 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "targets", target);
 		setArrayParam(parameter, "chipSpecs", chipSpec);
 		setArrayParam(parameter, "frameNames", frameName);
-		setArrayParam(parameter, "pls", pl);
+		//setArrayParam(parameter, "pls", pl);
+		parameter.put("pl", pl);
 		List<SearchCondObj> list = mapper.getPL(parameter);
+//		preSettingList(list);
+		return ApiResponse.success("OK", list);
+	}
+	
+	public ApiResponse getLOTID(String startDate, String endDate, String stepSeq, String productionType, String site, String line,
+			String productSpecGroup, String productSpecName, String lots, String lotText, String machine,
+			String program, String target, String chipSpec, String frameName, String pl) {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.put("startDate", startDate);
+		parameter.put("endDate", endDate);
+		parameter.put("lotText", lotText);
+		setArrayParam(parameter, "stepSeqs", stepSeq);
+		setArrayParam(parameter, "productionTypes", productionType);
+		setArrayParam(parameter, "sites", site);
+		setArrayParam(parameter, "divs", line);
+		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
+		setArrayParam(parameter, "productSpecNames", productSpecName);
+		setArrayParam(parameter, "lotIds", lots);
+		setArrayParam(parameter, "machines", machine);
+		setArrayParam(parameter, "programs", program);
+		setArrayParam(parameter, "targets", target);
+		setArrayParam(parameter, "chipSpecs", chipSpec);
+		setArrayParam(parameter, "frameNames", frameName);
+		setArrayParam(parameter, "pls", pl);
+		//setArrayParam(parameter, "lotIds", lots);
+		parameter.put("lotText", lotText);
+		List<SearchCondObj> list = mapper.getLOTID(parameter);
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
 	}

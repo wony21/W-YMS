@@ -5,6 +5,9 @@
     	SELECT LIST AS DISPLAY, LIST AS VALUE
     	FROM YMS_UI_OPTION
     	WHERE CLASS1 = 'STEP'
+    	<if test="stepSeq != null">
+    		AND LIST LIKE '%' || #{stepSeq}
+    	</if>
     	ORDER BY ORDEROPT ASC
     </select>
     
@@ -101,6 +104,9 @@
 				#{productSpecGroup}
 			</foreach>
 		</if>
+		<if test="productSpecGroup != null">
+			AND A.PRODUCTSPECGROUP LIKE '%' || #{productSpecGroup} || '%'
+		</if>
 		ORDER BY 1 ASC
     </select>
     
@@ -151,6 +157,9 @@
 			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
 				#{productSpecGroup}
 			</foreach>
+		</if>
+		<if test="productSpecName != null">
+			AND A.PRODUCTSPECNAME LIKE '%' || #{productSpecName} || '%'
 		</if>
 		<if test="productSpecNames != null">
 			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
@@ -211,6 +220,12 @@
 			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
 				#{lotId}
 			</foreach>
+		</if>
+		<if test="lotId != null">
+			AND A.LOTID LIKE '%' || #{lotId} || '%'
+		</if>
+		<if test="lotText != null">
+			AND A.LOTID LIKE '%' || #{lotText} || '%'
 		</if>
 		<if test="machines != null">
 			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
@@ -304,6 +319,9 @@
 		<if test="lotText != null and lotText != ''">
 			AND A.LOTID LIKE #{lotText} || '%'
 		</if>
+		<if test="machine != null">
+			AND A.EQPID LIKE '%' || #{machine} || '%'
+		</if>
 		<if test="machines != null">
 			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
 				#{machine}
@@ -368,6 +386,9 @@
 			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
 				#{machine}
 			</foreach>
+		</if>
+		<if test="program != null">
+			AND A.PROGRAM LIKE '%' || #{program} || '%'
 		</if>
 		<if test="programs != null">
 			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
@@ -440,6 +461,9 @@
 			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
 				#{program}
 			</foreach>
+		</if>
+		<if test="target != null">
+			AND L.TARGET LIKE '%' || #{target} || '%'
 		</if>
 		<if test="targets != null">
 			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
@@ -523,6 +547,9 @@
 				#{chipSpec}
 			</foreach>
 		</if>
+		<if test="chipSpec != null">
+			AND L.CHIPSPEC LIKE '%' || #{chipSpec} || '%'
+		</if>
 		ORDER BY 1 ASC
     </select>
     
@@ -604,6 +631,9 @@
 			<foreach item="intensity" index="i" collection="intensities" open="AND L.INTENSITY IN (" separator="," close=")">
 				#{intensity}
 			</foreach>
+		</if>
+		<if test="intensity != null">
+			AND L.INTENSITY LIKE '%' || #{intensity} || '%'
 		</if>
 		ORDER BY 1 ASC
     </select>
@@ -691,6 +721,9 @@
 			<foreach item="frameName" index="i" collection="frameNames" open="AND L.FRAMENAME IN (" separator="," close=")">
 				#{frameName}
 			</foreach>
+		</if>
+		<if test="frameName != null">
+			AND L.FRAMENAME LIKE '%' || #{frameName} || '%'
 		</if>
 		ORDER BY 1 ASC
     </select>
@@ -783,6 +816,9 @@
 			<foreach item="pl" index="i" collection="pls" open="AND L.PL IN (" separator="," close=")">
 				#{pl}
 			</foreach>
+		</if>
+		<if test="pl != null">
+			AND L.PL LIKE '%' || #{pl} || '%'
 		</if>
 		ORDER BY 1 ASC
     </select>
