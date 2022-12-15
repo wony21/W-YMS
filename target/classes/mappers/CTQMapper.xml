@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.CTQ.CTQMapper">
+<mapper namespace="com.compact.yms.domain.CTQ.CTQMapper">
     <select id="getList" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
     	SELECT ROW_NUMBER() OVER (ORDER BY A.UPDATETIME ASC) AS ROWIDX,
     		   ORDER_NO, 

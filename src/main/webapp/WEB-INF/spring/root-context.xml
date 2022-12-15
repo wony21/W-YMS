@@ -8,7 +8,7 @@
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
 	
 	<!-- Root Context: defines shared resources visible to all other web components -->
-	<context:component-scan base-package="com.compact.base, com.compact.base2" />
+	<context:component-scan base-package="com.compact.yms, com.compact.pop" />
 	
 	<!-- file upload bean --> 
 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
@@ -40,7 +40,7 @@
 	<!-- myBatis mapper -->
 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
-		<property name="typeAliasesPackage" value="com.compact.base" />
+		<property name="typeAliasesPackage" value="com.compact.yms" />
 		<property name="configLocation" value="classpath:/mybatis-config.xml" />
 		<property name="mapperLocations" value="classpath:/mappers/*.xml" />
 	</bean>
@@ -51,7 +51,7 @@
 	
 	<!-- mybatis scanner -->
 	<bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-		<property name="basePackage" value="com.compact.base" />
+		<property name="basePackage" value="com.compact.yms" />
 		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
 	</bean>
 	
@@ -71,7 +71,7 @@
 	<!-- myBatis mapper -->
 	<bean id="sqlSessionFactoryPOP" class="org.mybatis.spring.SqlSessionFactoryBean">
 		<property name="dataSource" ref="dataSourcePOP" />
-		<property name="typeAliasesPackage" value="com.compact.base2" />
+		<property name="typeAliasesPackage" value="com.compact.pop" />
 		<property name="configLocation" value="classpath:/mybatis-config.xml" />
 		<property name="mapperLocations" value="classpath:/pop_mappers/*.xml" />
 	</bean>
@@ -81,7 +81,7 @@
 	</bean>
 	
 	<bean id="mapperScannerPOP" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-		<property name="basePackage" value="com.compact.base2" />
+		<property name="basePackage" value="com.compact.pop" />
 		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryPOP" />
 	</bean>
 	

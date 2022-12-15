@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.chipmaster.bulk.BulkMapper">
-	<select id="getCommonCode" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+<mapper namespace="com.compact.yms.domain.chipmaster.bulk.BulkMapper">
+	<select id="getCommonCode" parameterType="hashmap" resultType="com.compact.yms.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
 		SELECT GROUPCODE,
 			   CODE AS "name", 
 		       CODE AS "text",
@@ -11,7 +11,7 @@
 		  AND USE = 'Y'
 		ORDER BY SEQ
 	</select>
-	<select id="getLine" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+	<select id="getLine" parameterType="hashmap" resultType="com.compact.yms.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
 		SELECT LIST AS "name",
 		       LIST AS "text",
 		       LIST AS "value" 
@@ -27,7 +27,7 @@
 		  AND CLASS2 = '1000'
 		ORDER BY 1 ASC  
 	</select>
-	<select id="getProductGroup" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+	<select id="getProductGroup" parameterType="hashmap" resultType="com.compact.yms.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
 		WITH SPEC AS (
 		    SELECT DISTINCT PRODUCTSPECGROUP
 		    FROM POP_PRODUCTSPEC
@@ -50,7 +50,7 @@
 		       PRODUCTSPECGROUP AS "value"
 		FROM SPEC
 	</select>
-	<select id="getDeployStatus" parameterType="hashmap" resultType="com.compact.base.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
+	<select id="getDeployStatus" parameterType="hashmap" resultType="com.compact.yms.domain.chipmaster.bulk.DropdownItem" statementType="PREPARED">
 		SELECT GROUPCODE,
 		       VALUE AS "name",
 		       VALUE AS "text",

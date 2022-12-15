@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.QueryCond.QueryCondMapper">
-    <select id="getStepSeq" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+<mapper namespace="com.compact.yms.domain.QueryCond.QueryCondMapper">
+    <select id="getStepSeq" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
     	SELECT LIST AS DISPLAY, LIST AS VALUE
     	FROM YMS_UI_OPTION
     	WHERE CLASS1 = 'STEP'
@@ -11,7 +11,7 @@
     	ORDER BY ORDEROPT ASC
     </select>
     
-    <select id="getStepType" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getStepType" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT STEPTYPE AS DISPLAY, STEPTYPE AS VALUE
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S
@@ -27,7 +27,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getSite" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getSite" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT DESCRIPTION AS DISPLAY, FACTORYNAME AS VALUE
 		FROM POP_MESFACTORY A
 		WHERE 1=1
@@ -36,7 +36,7 @@
 		ORDER BY FACTORYNAME ASC
     </select>
     
-    <select id="getLine" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getLine" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT DIV AS DISPLAY, DIV AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S
@@ -66,7 +66,7 @@
 		ORDER BY 1 ASC 
     </select>
     
-    <select id="getProductSpecGroup" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getProductSpecGroup" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT PRODUCTSPECGROUP AS DISPLAY, PRODUCTSPECGROUP AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S
@@ -110,7 +110,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getProductSpecName" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getProductSpecName" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT 
 		<choose>
 			<when test="opt != null and opt != ''">
@@ -169,7 +169,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getLOTID" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getLOTID" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT A.LOTID AS DISPLAY, A.LOTID AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,
@@ -265,7 +265,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getMachine" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getMachine" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT A.EQPID || '  ' || M.DESCRIPTION AS DISPLAY, A.EQPID AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,
@@ -330,7 +330,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getProgram" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getProgram" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT A.PROGRAM AS DISPLAY, A.PROGRAM AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S
@@ -398,7 +398,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getTarget" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getTarget" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT L.TARGET AS DISPLAY, L.TARGET AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,
@@ -473,7 +473,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getChipSpec" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getChipSpec" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT L.CHIPSPEC AS DISPLAY, L.CHIPSPEC AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,
@@ -553,7 +553,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getIntensity" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getIntensity" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT L.INTENSITY AS DISPLAY, L.INTENSITY AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,
@@ -638,7 +638,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getFrameName" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getFrameName" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT L.FRAMENAME AS DISPLAY, L.FRAMENAME AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,
@@ -728,7 +728,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getPL" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getPL" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT L.PL AS DISPLAY, L.PL AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,
@@ -823,7 +823,7 @@
 		ORDER BY 1 ASC
     </select>
     
-    <select id="getReelBatchID" parameterType="hashmap" resultType="com.compact.base.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+    <select id="getReelBatchID" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT A.LOTID AS DISPLAY, A.LOTID AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
 		     STD_CALENDAR S,

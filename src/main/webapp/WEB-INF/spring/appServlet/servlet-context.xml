@@ -39,7 +39,7 @@
         <beans:property name="fileEncoding" value="UTF-8" />
     </beans:bean>
 	
-	<context:component-scan base-package="com.compact.base" />
+	<context:component-scan base-package="com.compact.yms" />
 	<!-- 스케줄 설정 -->
 	<!-- <task:scheduler id="CTQScheduler" pool-size="10"/> -->
 	<task:annotation-driven />

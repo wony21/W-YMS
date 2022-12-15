@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.file.EqpFileMapper">
-    <select id="getFileList" parameterType="hashmap" resultType="com.compact.base.domain.file.dto.FileList" statementType="PREPARED">
+<mapper namespace="com.compact.yms.domain.file.EqpFileMapper">
+    <select id="getFileList" parameterType="hashmap" resultType="com.compact.yms.domain.file.dto.FileList" statementType="PREPARED">
     	SELECT 'False' AS "selected",
 		         A.FMKEY AS "fmKey",
 		         A.LOTID as "lotId",
@@ -95,7 +95,7 @@
 				  </if>
 		ORDER BY LOTID, TKINTIME
     </select>
-    <select id="getFile10Y" parameterType="hashmap" resultType="com.compact.base.domain.file.dto.YMS_FILEINDEX_10Y" statementType="PREPARED">
+    <select id="getFile10Y" parameterType="hashmap" resultType="com.compact.yms.domain.file.dto.YMS_FILEINDEX_10Y" statementType="PREPARED">
     	SELECT FMKEY
 			,SUBFMKEY
 			,LOTID

@@ -1,5 +1,5 @@
-<%@ page import="com.compact.base.common.SessionUtils"%>
-<%@ page import="com.compact.base.security.CustomUserDetails" %>
+<%@ page import="com.compact.yms.common.SessionUtils"%>
+<%@ page import="com.compact.yms.security.CustomUserDetails" %>
 <%@ page language="java" contentType="text/html; charset=EUC-KR" pageEncoding="EUC-KR"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page session="false" %>

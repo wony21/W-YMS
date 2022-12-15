@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.ranktrend.RankTrendMapper">
+<mapper namespace="com.compact.yms.domain.ranktrend.RankTrendMapper">
 	<select id="getRankTrendOfSeperator" parameterType="hashmap" 
-										 resultType="com.compact.base.domain.ranktrend.dto.ResultTableData" statementType="PREPARED">
+										 resultType="com.compact.yms.domain.ranktrend.dto.ResultTableData" statementType="PREPARED">
 		WITH DATA_M
 		     AS (  SELECT S.FACTORYNAME,
 		                  A.FMKEY,

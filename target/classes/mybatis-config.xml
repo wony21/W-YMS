@@ -10,7 +10,7 @@
 
 	<typeAliases>
 		<typeAlias alias="hashmap" type="java.util.HashMap" />
-		<!-- <typeAlias alias="camelmap" type="com.compact.base.common.CamelCaseMap" />  -->
+		<!-- <typeAlias alias="camelmap" type="com.compact.yms.common.CamelCaseMap" />  -->
 	</typeAliases>
 
 </configuration>

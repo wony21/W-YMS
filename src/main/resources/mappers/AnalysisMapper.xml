@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.analysis.AnalysisMapper">
+<mapper namespace="com.compact.yms.domain.analysis.AnalysisMapper">
     <select id="getFileLocation" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
     	SELECT B.LOTID AS LOT_ID,
     		   B.SEQ,
@@ -65,7 +65,7 @@
 		  </if>
 		ORDER BY B.LOTID, B.SEQ
     </select>
-    <select id="getInfo" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.FileLocation" statementType="PREPARED">
+    <select id="getInfo" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.FileLocation" statementType="PREPARED">
     	SELECT B.STEPSEQ,
 	         B.LOTID,
 	         TO_CHAR(B.TKINTIME, 'YYYYMMDDHH24MISS') AS TKINTIME,
@@ -143,7 +143,7 @@
 		  </if>
 		ORDER BY B.LOTID, B.SEQ
     </select>
-    <select id="getMeasureItemNames" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.ItemName" statementType="PREPARED">
+    <select id="getMeasureItemNames" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.ItemName" statementType="PREPARED">
     	SELECT DISTINCT B.ITEMNAME
 		  FROM STD_CALENDAR S, 
 		       YMS_FILEINDEX_10Y A, 
@@ -238,7 +238,7 @@
 			</if>
 		    ORDER BY ITEMNAME ASC
     </select>
-    <select id="getSeperatorCIE" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.SeperatorData" statementType="PREPARED">
+    <select id="getSeperatorCIE" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.SeperatorData" statementType="PREPARED">
     	SELECT MATNR AS PARTID, ZTEPG AS PROGRAM, CIE, X1, Y1, X2, Y2, X3, Y3, X4, Y4
 		FROM POP_ERP_SEPERATOR_CIE
 		WHERE WERKS = #{factoryName}
@@ -246,7 +246,7 @@
 		  AND MATNR = #{productSpecName}
 		ORDER BY CIE ASC
     </select>
-    <select id="getCieXYItemName" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.CieNameInfo" statementType="PREPARED">
+    <select id="getCieXYItemName" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.CieNameInfo" statementType="PREPARED">
     	SELECT MAX(CASE WHEN DEFAULTFLAG = 'X' THEN ENUMVALUE END) CIEX,
 		       MAX(CASE WHEN DEFAULTFLAG = 'Y' THEN ENUMVALUE END) CIEY
 		FROM POP_ENUMDEFVALUE
@@ -264,7 +264,7 @@
     	INSERT INTO YMS_ANAL_HISTORY (KEY, SAVETYPE, FACTORYNAME, DIV, STARTDT, ENDDT, STEPSEQ, LOTTYPE, PRODUCTSPECGROUP, PRODUCTSPECNAME, PROGRAM, TARGET, CHIPSPEC, FRAMENAME, INTENSITY, PL, LOTID, SUBFRAMENAME, CREATETIME, FILEPATH, BYTES, USERID)
     	VALUES (#{key}, #{saveType}, #{factoryName}, #{div}, #{startDate}, #{endDate}, #{stepSeq}, #{lotType}, #{productSpecGroup}, #{productSpecName}, #{program}, #{target}, #{chipSpec}, #{frameName}, #{intensity}, #{pl}, #{lotId}, #{subFrameName}, SYSDATE, #{filePath}, ${bytes}, #{userId})
     </insert>
-    <select id="getHistory" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.RunHistoryData" statementType="PREPARED">
+    <select id="getHistory" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.RunHistoryData" statementType="PREPARED">
 	    SELECT KEY,
 	       FACTORYNAME,
 	       DIV,
@@ -327,7 +327,7 @@
 	 	AND ${cond8Column} LIKE '%' || #{cond8Value} || '%'
 	 </if>
     </select>
-    <select id="getHistoryOnKey" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.RunHistoryData" statementType="PREPARED">
+    <select id="getHistoryOnKey" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.RunHistoryData" statementType="PREPARED">
     	SELECT KEY,
 	       FACTORYNAME,
 	       DIV,
@@ -364,7 +364,7 @@
     	SET COMMENTS = #{comments}
     	WHERE KEY = #{key}
     </update>
-    <select id="getAllUserListForShare" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.ShareUserListData" statementType="PREPARED">
+    <select id="getAllUserListForShare" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.ShareUserListData" statementType="PREPARED">
     	SELECT USERID, USERNAME, DEPARTMENT_DESC AS DEPARTMENTNAME
     	FROM POP_USERPROFILE
     	WHERE STATUS IN ('1', '2')
@@ -376,7 +376,7 @@
     	  </if>
 		ORDER BY DEPARTMENT, USERID ASC
     </select>
-    <select id="getShareUserLists" parameterType="hashmap" resultType="com.compact.base.domain.analysis.DTO.ShareUserListData" statementType="PREPARED">
+    <select id="getShareUserLists" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.ShareUserListData" statementType="PREPARED">
     	SELECT A.USERID, B.USERNAME, B.DEPARTMENT_DESC AS DEPARTMENTNAME
     	FROM YMS_ANAL_HISTORY_SHARE A,
     	     POP_USERPROFILE B

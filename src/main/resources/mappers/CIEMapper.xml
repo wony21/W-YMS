@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.CIE.CIEMapper">
+<mapper namespace="com.compact.yms.domain.CIE.CIEMapper">
     <select id="getList" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
     	SELECT B.DIV,
 	         C.PRODUCTSPECGROUP,
@@ -57,7 +57,7 @@
 		ORDER BY PROGRAM
     </select>
     
-    <resultMap type="com.compact.base.domain.CIE.dto.FileClobObject" id="FileClobObjectList">
+    <resultMap type="com.compact.yms.domain.CIE.dto.FileClobObject" id="FileClobObjectList">
     	<result property="fmKey" column="FM_KEY"/>
     	<result property="dataType" column="DATA_TYPE"/>
     	<result property="flag" column="flag"/>
@@ -85,7 +85,7 @@
 		ORDER BY CIE
     </select>
     
-    <select id="getSeperator" parameterType="hashmap" resultType="com.compact.base.domain.CIE.dto.SeperatorObj" statementType="PREPARED">
+    <select id="getSeperator" parameterType="hashmap" resultType="com.compact.yms.domain.CIE.dto.SeperatorObj" statementType="PREPARED">
     	SELECT MATNR AS PART_ID,
     		   ZTEPG AS PROGRAM,
     		   ZBINNO AS BIN_NO,

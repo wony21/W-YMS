@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.compact.base.domain.common.CommonMapper">
+<mapper namespace="com.compact.yms.domain.common.CommonMapper">
     <select id="test" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
     	SELECT USERID AS USER_ID, 
     		   USERNAME AS USER_NAME, 
