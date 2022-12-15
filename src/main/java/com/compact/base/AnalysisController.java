@@ -65,7 +65,7 @@ public class AnalysisController extends BaseController {
 		return ApiResponse.success("OK",
 				analysisService.getYiedItemNames(div, stepSeq, productSpecName, startTime, endTime, lotID));
 	}
-
+/*
 	@RequestMapping(value = "/getChartChipAnalysis", method = RequestMethod.GET, produces = APPLICATION_JSON)
 	@ResponseBody
 	public ApiResponse getChartChipAnalysis(@RequestParam String div, @RequestParam String startTime,
@@ -79,7 +79,7 @@ public class AnalysisController extends BaseController {
 				analysisService.getShareTotalAnalysis(div, startTime, endTime, stepSeq, productSpecGroup,
 						productSpecName, program, target, chipSpec, frameName, lotID, itemFilter, min, max, stepCount));
 	}
-
+*/
 	@RequestMapping(value = "/measureItemName", method = RequestMethod.GET, produces = APPLICATION_JSON)
 	@ResponseBody
 	public ApiResponse getItemName10Y(@RequestParam(required = true) String factoryName,

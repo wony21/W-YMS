@@ -8,4 +8,9 @@
     <insert id="addProcessOperation" parameterType="hashmap" statementType="PREPARED">
     	${insertSql}
     </insert>
+    <select id="getCodeList" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT * 
+		FROM TB_CODE_LIST
+		WHERE GROUP_CODE = #{groupCd}
+    </select>
 </mapper>

@@ -36,9 +36,9 @@ public class FTPUtils {
 
 	FTPClient ftp;
 
-	public boolean connect() {
+	public FTPClient connect() {
 
-		ftp = new FTPClient();
+		FTPClient ftp = new FTPClient();
 		try {
 
 			FTPClientConfig config = new FTPClientConfig();
@@ -54,14 +54,14 @@ public class FTPUtils {
 			if (!FTPReply.isPositiveCompletion(reply)) {
 				ftp.disconnect();
 				logger.error("FTP: FTP server refused connection.");
-				return false;
+				return ftp;
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage());
-			return false;
+			return ftp;
 		}
 
-		return true;
+		return ftp;
 	}
 
 	public File getFile(String remotePath) throws IOException {
@@ -102,23 +102,70 @@ public class FTPUtils {
 		} catch (Exception e) {
 		}
 	}
+	
+	public void disconnect(FTPClient ftpClient) {
+		try {
+			if (ftpClient != null) {
+				if (ftpClient.isConnected()) {
+					ftpClient.logout();
+					ftpClient.disconnect();
+				}
+			}
+		} catch (Exception e) {
+		}
+	}
+	
+	
+	public File downloadFile(FTPClient ftpClient, String remotePath) throws IOException {
+		
+		try {
+			logger.info("FTP : Request find file[{}]", remotePath);
+			FTPFile[] files = ftpClient.listFiles(remotePath);
+			logger.info("FTP: Flie Count [{}]", files.length);
+			if (files.length == 0) {
+				return null;
+			}
+			File tmpFile = File.createTempFile("tmp_", ".csv");
+			logger.info("TEMP:[{}]", tmpFile.getName());
+			FileOutputStream outputStream = new FileOutputStream(tmpFile);
+			outputStream.flush();
+			ftpClient.setBufferSize(4096);
+			ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+			if (ftpClient.retrieveFile(remotePath, outputStream)) {
+				IOUtils.closeQuietly(outputStream);
+				logger.info("FTP: Download file [{}] tmp[{}]", remotePath, tmpFile.getAbsolutePath());
+				return tmpFile;
+			} else {
+				IOUtils.closeQuietly(outputStream);
+				tmpFile.delete();
+				logger.error("FTP: Download error file[{}]", remotePath);
+				return null;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		} finally {
+			
+		}
+		return null;
+		
+	}
 
-	public boolean exist(String path) throws IOException {
-		FTPFile[] ftpFiles = ftp.listDirectories(path);
+	public boolean exist(FTPClient ftpClient, String path) throws IOException {
+		FTPFile[] ftpFiles = ftpClient.listDirectories(path);
 		return ftpFiles.length > 0;
 	}
 
-	public void makeDirectory(String path) throws IOException {
-		ftp.makeDirectory(path);
+	public void makeDirectory(FTPClient ftpClient, String path) throws IOException {
+		ftpClient.makeDirectory(path);
 	}
 
-	public Boolean upload(String uploadPath, File file) throws IOException {
+	public Boolean upload(FTPClient ftpClient, String uploadPath, File file) throws IOException {
 		FileInputStream fis = new FileInputStream(file);
 		try {
-			ftp.enterLocalPassiveMode();
-			ftp.setFileType(FTP.BINARY_FILE_TYPE);
-			ftp.changeWorkingDirectory(uploadPath);
-			return ftp.storeFile(file.getName(), fis);
+			ftpClient.enterLocalPassiveMode();
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+			ftpClient.changeWorkingDirectory(uploadPath);
+			return ftpClient.storeFile(file.getName(), fis);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		} finally {

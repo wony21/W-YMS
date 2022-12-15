@@ -186,14 +186,14 @@ public class AnalysisService extends BaseService {
 
 		logger.info("Start file downloading FileCount[{}]", list.size());
 
-		ftpUtils.connect();
+		FTPClient ftpClient = ftpUtils.connect();
 		for (FileLocation fileInfo : list) {
 			String remoteFilePath = fileInfo.getRemoteFileName();
-			File file = ftpUtils.getFile(remoteFilePath);
+			File file = ftpUtils.downloadFile(ftpClient, remoteFilePath);
 			fileInfo.setItemId(itemName);
 			fileInfo.setFile(file);
 		}
-		ftpUtils.disconnect();
+		ftpUtils.disconnect(ftpClient);
 
 		return list;
 	}
@@ -435,7 +435,7 @@ public class AnalysisService extends BaseService {
 		}
 		return list;
 	}
-
+/*
 	public List getShareTotalAnalysis(String div, String startTime, String endTime, String stepSeq,
 			String productSpecGroup, String productSpecName, String program, String target, String chipSpec,
 			String frameName, String lotID, String itemFilter, double min, double max, int stepCount) throws Exception {
@@ -506,7 +506,7 @@ public class AnalysisService extends BaseService {
 
 		return shareLists;
 	}
-
+*/
 	public List<SeperatorData> getSeperatorCie(String factoryName, String productSpecName, String program) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("factoryName", factoryName);
@@ -747,13 +747,14 @@ public class AnalysisService extends BaseService {
 			String productionType, String productSpecGroup, String productSpecName, String program, String target,
 			String chipSpec, String frameName, String subFrameName, String intensity, String pl, String lotId,
 			String userId, File file) throws IOException {
-
 		String savePath = String.format("%s/%s", ftpHistorySavePath, userId);
-		ftpUtils.connect();
-		if (!ftpUtils.exist(savePath)) {
-			ftpUtils.makeDirectory(savePath);
+		logger.info("Save history file {}", savePath);
+		FTPClient ftpClient = ftpUtils.connect();
+		if (!ftpUtils.exist(ftpClient, savePath)) {
+			ftpUtils.makeDirectory(ftpClient, savePath);
 		}
-		if (ftpUtils.upload(savePath, file)) {
+		if (ftpUtils.upload(ftpClient, savePath, file)) {
+			ftpUtils.disconnect(ftpClient);
 			Long fileSize = file.length();
 			String orgFileName = file.getName();
 			String extention = FileNameUtils.getExtension(orgFileName);
@@ -945,13 +946,13 @@ public class AnalysisService extends BaseService {
 		// 파일 다운로드
 		String filePath = list.get(0).getFilePath();
 		try {
-			ftpUtils.connect();
-			File file = ftpUtils.getFile(filePath);
+			FTPClient ftpClient = ftpUtils.connect();
+			File file = ftpUtils.downloadFile(ftpClient, filePath);
 			if (file != null) {
 				response.setOrgFileName(file.getName());
 				response.setFile(file);
 			}
-			ftpUtils.disconnect();
+			ftpUtils.disconnect(ftpClient);
 		} catch (Exception e) {
 			response.setIsError(true);
 			response.setErrorMsg(e.getMessage());

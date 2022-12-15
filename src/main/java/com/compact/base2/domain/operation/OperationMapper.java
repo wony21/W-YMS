@@ -12,5 +12,7 @@ public interface OperationMapper {
 	public List getProcessOperation();
 	public void addProcessOperation(Map<String, Object> parameter);
 	
+	public List getCodeList(Map<String, Object> parameter);
+	
 }
 

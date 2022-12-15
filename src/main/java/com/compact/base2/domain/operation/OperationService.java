@@ -28,4 +28,10 @@ public class OperationService {
 		
 	}
 	
+	public List getCodeList(String groupCode) {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.put("groupCd", groupCode);
+		return mapper.getCodeList(parameter);
+	}
+	
 }
