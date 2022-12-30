@@ -191,8 +191,8 @@ public class AnalysisUtils {
 			logger.error("Cannot found cie-y index. (no has '1') [{}]", file.getName());
 		}
 
-//		logger.info("measureIndex[{}] itemNameIndex[{}] itemStartIndex[{}].",
-//				new Object[] { measureIndex, itemNameIndex, itemStartIndex });
+		logger.info("measureIndex[{}] itemNameIndex[{}] itemStartIndex[{}].",
+				new Object[] { measureIndex, itemNameIndex, itemStartIndex });
 
 		if (measureIndex >= 0 && itemNameIndex >= 0 && itemStartIndex >= 0) {
 			for (int i = itemStartIndex; i < contentLines.length; i++) {
@@ -200,18 +200,29 @@ public class AnalysisUtils {
 					break;
 
 				String[] itemParams = contentLines[i].split(",");
+				
+				int itemParamLength = itemParams.length;
+				
+				if (itemParamLength < cieXIndex || itemParamLength < cieYIndex) {
+					logger.warn("Invalid item param length. ItemParamLen[{}] Cie-X Index[{}] Cie-Y Index[{}]", new Object[] { itemParamLength, cieXIndex, cieYIndex });
+					continue;
+				}
+				
 				String cieXValue = itemParams[cieXIndex];
 				String cieYValue = itemParams[cieYIndex];
+				
+				logger.info("ROW[{}] CIE-X[{}] CIE-Y[{}]", new Object[] { i, cieXValue, cieYValue });
+				
 				if (!cieXValue.isEmpty() && !cieYValue.isEmpty()) {
 					Double x = NumberUtils.toDouble(cieXValue);
 					Double y = NumberUtils.toDouble(cieYValue);
 					Point point = new Point();
 					point.setLocation(replaceDoubleData(x), replaceDoubleData(y));
 					itemValues.add(point);
-				}
+				} 
 			}
 		}
-//		logger.info("Item value count [{}] added.", new Object[] { itemValues.size() });
+		logger.info("Item value count [{}] added.", new Object[] { itemValues.size() });
 		return itemValues;
 	}
 
@@ -313,7 +324,7 @@ public class AnalysisUtils {
 
 		double d = data == 0d ? 1d : data;
 
-		Double ret = data * 100000;
+		Double ret = d * 100000;
 
 		return ret.intValue();
 	}
@@ -877,6 +888,8 @@ public class AnalysisUtils {
 
 	public static List<TableShareData> occCieChipCount(List<ChartShareCieData> shareTable, FileLocation info,
 			List<Point> totalMeasureDatas) {
+		
+		logger.info("OccCieChipCount");
 
 		@SuppressWarnings("unchecked")
 		List<Point> measureData = (List<Point>) ((ArrayList<Point>) totalMeasureDatas).clone();

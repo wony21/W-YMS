@@ -644,6 +644,7 @@ public class AnalysisService extends BaseService {
 			String cieY = nameInfo.getCieY();
 			logger.info("Get measuredata for cie-x, cie-y");
 			List<Point> measureValues = AnalysisUtils.getItemPointValueList(file, cieX, cieY);
+			logger.info("Get measuredata chip count.");
 			List<TableShareData> tableData = AnalysisUtils.occCieChipCount(shareLists, location, measureValues);
 			tableLists.addAll(tableData);
 			itemValueData.getItemPointValue().addAll(measureValues);
