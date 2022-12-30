@@ -252,13 +252,16 @@ public class AnalysisController extends BaseController {
 	@ResponseBody
 	public ApiResponse getRunHistory(@RequestParam(required = true) String startDate,
 			@RequestParam(required = true) String endDate, @RequestParam(required = true) String userId,
+			@RequestParam(required = true) String type,
 			@RequestParam(required = false) String optSaveDate, @RequestParam(required = false) String cond1,
 			@RequestParam(required = false) String cond2, @RequestParam(required = false) String cond3,
 			@RequestParam(required = false) String cond4, @RequestParam(required = false) String cond5,
 			@RequestParam(required = false) String cond6, @RequestParam(required = false) String cond7,
 			@RequestParam(required = false) String cond8) {
 
-		List list = analysisService.getHistory(startDate, endDate, userId, optSaveDate, cond1, cond2, cond3, cond4,
+		logger.info("Get History!");
+		
+		List list = analysisService.getHistory(startDate, endDate, userId, type, optSaveDate, cond1, cond2, cond3, cond4,
 				cond5, cond6, cond7, cond8);
 
 		return ApiResponse.success("OK", list);

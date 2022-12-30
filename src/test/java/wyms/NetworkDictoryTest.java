@@ -11,12 +11,16 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPFile;
@@ -255,9 +259,9 @@ public class NetworkDictoryTest {
 				}
 			}
 		}
-		
+
 		String fileFileName = files[0].getName();
-		
+
 		File outputFile = new File(filePath + "\\" + "Merge.csv");
 
 		if (!outputFile.exists()) {
@@ -292,10 +296,10 @@ public class NetworkDictoryTest {
 		FileUtils.writeLines(outputFile, mergeData);
 
 	}
-	
-	@Test
+
+	// @Test
 	public void RectangleIn() {
-		
+
 		double x1 = 0;
 		double y1 = 0;
 		double x2 = 0;
@@ -304,11 +308,48 @@ public class NetworkDictoryTest {
 		double y3 = 0;
 		double x4 = 0;
 		double y4 = 0;
-		
+
 		double posX = 0;
 		double posY = 0;
-		
+
 		java.awt.Rectangle rect = new Rectangle();
+
+	}
+
+	@Test
+	public void RunTest1() {
+
+		Double[] dataValues = { 1d, 2d, 3d, 1d, 1d, 1d, 4d, 5d, 6d, 7d, 8d, 9d, 10d };
+
+		List<Double> listData = Arrays.asList(dataValues);
+		
+		listData = listData.stream().distinct().collect(Collectors.toList());
+
+		SummaryStatistics stats = new SummaryStatistics();
+		for (double d : listData) {
+			stats.addValue(d);
+		}
+
+		double std = stats.getStandardDeviation();
+		System.out.println("std:" + std);
+		
+		double mean = listData.stream().mapToDouble(a -> a).average().orElse(0);
+		System.out.println("mean:" + mean);
+		
+		NormalDistribution cdf = new NormalDistribution(mean, std);
+		
+		for(double i : listData) {
+			double norm = cdf.cumulativeProbability(i);
+			System.out.println("[" + i + "] " + norm);
+		}
+		
+		// 
+		
+		
+		// double avg = Collectors.averagingDouble(listData);
+		
+		
+		
 		
 		
 		

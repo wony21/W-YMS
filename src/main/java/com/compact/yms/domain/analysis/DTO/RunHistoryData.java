@@ -11,6 +11,12 @@ public class RunHistoryData {
 
 	String key;
 	
+	String createTime;
+	
+	String comments;
+	
+	String bytes;
+	
 	String factoryName;
 	
 	String div;
@@ -42,12 +48,6 @@ public class RunHistoryData {
 	String lotId;
 	
 	String userId;
-	
-	String createTime;
-	
-	String bytes;
-	
-	String comments;
 	
 	String filePath;
 	

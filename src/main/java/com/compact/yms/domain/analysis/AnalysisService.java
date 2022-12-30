@@ -786,14 +786,15 @@ public class AnalysisService extends BaseService {
 		}
 	}
 
-	public List<RunHistoryData> getHistory(String startDate, String endDate, String userId, String optSaveDate,
+	public List<RunHistoryData> getHistory(String startDate, String endDate, String userId, String type, String optSaveDate,
 			String cond1, String cond2, String cond3, String cond4, String cond5, String cond6, String cond7,
 			String cond8) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("optSaveDate", optSaveDate);
 		parameter.put("startDate", startDate);
 		parameter.put("endDate", endDate);
-		parameter.put("userId", userId);
+		parameter.put("userId", userId.toLowerCase());
+		parameter.put("type", type);
 		setCustomCond(parameter, "cond1", cond1);
 		setCustomCond(parameter, "cond2", cond2);
 		setCustomCond(parameter, "cond3", cond3);

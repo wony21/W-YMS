@@ -266,6 +266,7 @@
     </insert>
     <select id="getHistory" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.RunHistoryData" statementType="PREPARED">
 	    SELECT KEY,
+	       COMMENTS,
 	       FACTORYNAME,
 	       DIV,
 	       STARTDT,
@@ -283,10 +284,9 @@
 	       LOTID,
 	       USERID,
 	       TO_CHAR (CREATETIME, 'YYYY-MM-DD HH24:MI:SS') AS CREATETIME,
-	       TO_CHAR(BYTES, 'FM999,999,999,999') AS BYTES,
-	       COMMENTS
+	       TO_CHAR(BYTES, 'FM999,999,999,999') AS BYTES
 	  FROM YMS_ANAL_HISTORY
-	 WHERE SAVETYPE = 'Share'
+	 WHERE SAVETYPE = #{type}
 	   AND DELYN = 'N'
 	 <if test='userId != "yms"'>
 	 	AND (KEY IN (SELECT KEY FROM YMS_ANAL_HISTORY_SHARE WHERE USERID = #{userId}) OR USERID = #{userId})

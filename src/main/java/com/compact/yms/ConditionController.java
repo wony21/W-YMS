@@ -157,8 +157,10 @@ public class ConditionController extends BaseController {
 			@RequestParam(required = false) String machine,
 			@RequestParam(required = false) String program, 
 			@RequestParam(required = false) String target,
+			@RequestParam(required = false) String intensity,
 			@RequestParam(required = false) String chipSpec, 
 			@RequestParam(required = false) String frameName,
+			@RequestParam(required = false) String subFrameName,
 			@RequestParam(required = false) String pl) {
 
 		if ("stepSeq".equals(type)) {
@@ -181,7 +183,7 @@ public class ConditionController extends BaseController {
 					productSpecName, lotID);
 			*/
 			return condService.getLOTID(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName,
-					lotID, lotText, machine, program, target, chipSpec, frameName, pl);
+					lotID, lotText, machine, program, target, intensity, chipSpec, frameName, pl);
 		} else if ("machine".equals(type)) {
 			return condService.getMachine(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
 					productSpecName, lotID, lotText, machine);
@@ -191,15 +193,18 @@ public class ConditionController extends BaseController {
 		} else if ("target".equals(type)) {
 			return condService.getTarget(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
 					productSpecName, lotID, lotText, machine, program, target);
+		} else if ("intensity".equals(type)) {
+			return condService.getIntesity(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
+					productSpecName, lotID, lotText, machine, program, target, intensity);
 		} else if ("chipSpec".equals(type)) {
 			return condService.getChipSpec(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine, program, target, chipSpec);
+					productSpecName, lotID, lotText, machine, program, target, intensity, chipSpec);
 		} else if ("frameName".equals(type)) {
 			return condService.getFrameName(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine, program, target, chipSpec, frameName);
+					productSpecName, lotID, lotText, machine, program, target, intensity, chipSpec, frameName);
 		} else if ("pl".equals(type)) {
 			return condService.getPL(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName,
-					lotID, lotText, machine, program, target, chipSpec, frameName, pl);
+					lotID, lotText, machine, program, target, intensity, chipSpec, frameName, pl);
 		} else if ("reelBatchId".equals(type)) {
 			return condService.getReelBatchID(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName,
 					lotID, lotText, machine, program, target);

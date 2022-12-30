@@ -18,6 +18,7 @@ public interface QueryCondMapper {
 	public List getMachine(Map<String, Object> parameter);
 	public List getProgram(Map<String, Object> parameter);
 	public List getTarget(Map<String, Object> parameter);
+	public List getIntensity(Map<String, Object> parameter);
 	public List getChipSpec(Map<String, Object> parameter);
 	public List getFrameName(Map<String, Object> parameter);
 	public List getPL(Map<String, Object> parameter);

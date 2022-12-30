@@ -202,10 +202,33 @@ public class QueryCondService extends BaseService {
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
 	}
+	
+	public ApiResponse getIntesity(String startDate, String endDate, String stepSeq, String productionType, String site, String line,
+			String productSpecGroup, String productSpecName, String lots, String lotText, String machine,
+			String program, String target, String intensity) {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.put("startDate", startDate);
+		parameter.put("endDate", endDate);
+		parameter.put("lotText", lotText);
+		setArrayParam(parameter, "stepSeqs", stepSeq);
+		setArrayParam(parameter, "productionTypes", productionType);
+		setArrayParam(parameter, "sites", site);
+		setArrayParam(parameter, "divs", line);
+		setArrayParam(parameter, "productSpecGroups", productSpecGroup);
+		setArrayParam(parameter, "productSpecNames", productSpecName);
+		setArrayParam(parameter, "lotIds", lots);
+		setArrayParam(parameter, "machines", machine);
+		setArrayParam(parameter, "programs", program);
+		//setArrayParam(parameter, "targets", target);
+		parameter.put("intensity", intensity);
+		List<SearchCondObj> list = mapper.getIntensity(parameter);
+//		preSettingList(list);
+		return ApiResponse.success("OK", list);
+	}
 
 	public ApiResponse getChipSpec(String startDate, String endDate, String stepSeq, String productionType, String site, String line,
 			String productSpecGroup, String productSpecName, String lots, String lotText, String machine,
-			String program, String target, String chipSpec) {
+			String program, String target, String intensity, String chipSpec) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("startDate", startDate);
 		parameter.put("endDate", endDate);
@@ -229,7 +252,7 @@ public class QueryCondService extends BaseService {
 
 	public ApiResponse getFrameName(String startDate, String endDate, String stepSeq, String productionType, String site, String line,
 			String productSpecGroup, String productSpecName, String lots, String lotText, String machine,
-			String program, String target, String chipSpec, String frameName) {
+			String program, String target, String intensity, String chipSpec, String frameName) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("startDate", startDate);
 		parameter.put("endDate", endDate);
@@ -254,7 +277,7 @@ public class QueryCondService extends BaseService {
 
 	public ApiResponse getPL(String startDate, String endDate, String stepSeq, String productionType, String site, String line,
 			String productSpecGroup, String productSpecName, String lots, String lotText, String machine,
-			String program, String target, String chipSpec, String frameName, String pl) {
+			String program, String target, String intensity, String chipSpec, String frameName, String pl) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("startDate", startDate);
 		parameter.put("endDate", endDate);
@@ -280,7 +303,7 @@ public class QueryCondService extends BaseService {
 	
 	public ApiResponse getLOTID(String startDate, String endDate, String stepSeq, String productionType, String site, String line,
 			String productSpecGroup, String productSpecName, String lots, String lotText, String machine,
-			String program, String target, String chipSpec, String frameName, String pl) {
+			String program, String target, String intensity, String chipSpec, String frameName, String pl) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("startDate", startDate);
 		parameter.put("endDate", endDate);
