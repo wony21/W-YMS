@@ -5,6 +5,11 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.compact.yms.common.CamelCaseMap;
+import com.compact.yms.domain.CTQ.dto.CTQAlarm;
+import com.compact.yms.domain.CTQ.dto.CTQAlarmConfig;
+import com.compact.yms.domain.CTQ.dto.Factor;
+
 
 @Mapper
 public interface CTQMapper {
@@ -32,6 +37,22 @@ public interface CTQMapper {
 	public int addMailImage(Map<String, Object> parameter);				// ChartImage
 	public int reserveSendMail(Map<String, Object> parameter);			// 메일발송템플릿저장 - 사용안함
 	public void requestSendMail();										// 메일발송(오늘 날짜 미발송 분에 대한 메일 전체 발송) - 사용안함
-
+	
+	public List<Factor> getFactor(Map<String, Object> parameter);		// Factor 구하기
+	public List<CTQAlarm> getCTQDataForAlarm(Map<String, Object> parameter);	// 알람검출용 데이터 조회
+	
+	/* CTQ ALARM */
+	public List<CTQAlarmConfig> getCTQAlarmConfig(Map<String, Object> parameter);	// CTQ Alarm Config
+	
+	public List getCTQConfigTestLocation(Map<String, Object> parameter);
+	public List getCTQConfigTestProvision(Map<String, Object> parameter);
+	public List getCTQConfigTestProduct(Map<String, Object> parameter);
+	
+	public List getCTQAlarmScheduleHistory(Map<String, Object> parameter);
+	public void requestSendCTQNgMailInMailId(Map<String, Object> parameter);	// NG메일발송 MAILID필수
+	
+	public int addCTQAlarmLog(Map<String, Object> parameter);
+	public List<CamelCaseMap> getCTQAlarmLog(Map<String, Object> parameter);
+	public List<CamelCaseMap> getCTQProductCpkRange(Map<String, Object> parameter);
 	
 }

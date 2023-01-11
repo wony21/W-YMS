@@ -290,7 +290,15 @@
     </select>
     <select id="requestSendMailInMailId" parameterType="hashmap" statementType="CALLABLE">
     	{
-    		call SEND_CTQ_MAIL_DAY_v2
+    		call SEND_CTQ_MAIL_DAY_vTest
+    		(
+    			#{mailId, mode=IN, jdbcType=INTEGER}
+    		)
+    	}
+    </select>
+    <select id="requestSendCTQNgMailInMailId" parameterType="hashmap" statementType="CALLABLE">
+    	{
+    		call SEND_CTQ_NG_MAIL
     		(
     			#{mailId, mode=IN, jdbcType=INTEGER}
     		)
@@ -343,7 +351,7 @@
     	SELECT 'VINA' SITE, A.ITEM_CODE, A.ITEM_NAME, A.ITEM1, A.ITEM2, A.CHIP_NAME, A.EQUIP, A.MIN_VALUE, A.MAX_VALUE, A.CMIN_VALUE, A.CMAX_VALUE 
 		   , A.AVG_VALUE, A.VALUE1  , A.VALUE2, A.VALUE3, A.VALUE4, A.VALUE5, A.VALUE6, A.VALUE7, A.VALUE8, A.VALUE9, A.VALUE10
 		   , A.VALUE11  , A.VALUE12, A.VALUE13, A.VALUE14, A.VALUE15, A.VALUE16, A.VALUE17, A.VALUE18, A.VALUE19, A.VALUE20
-		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP
+		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP, A.N
 		FROM POP_TB_TEST_PULL_HISTORY A, CTQ_COMMON B, CTQ_COMMON C
 		WHERE 1=1
 		<if test="sumOpt != null and sumOpt != ''">
@@ -393,4 +401,177 @@
 		  AND A.CODE = B.PRODUCTSPECNAME
 	 	ORDER BY A.SEQ ASC
     </select>    
+    <select id="getFactor" parameterType="hashmap" resultType="com.compact.yms.domain.CTQ.dto.Factor" statementType="PREPARED">
+    	SELECT FACTSIZE, A2, A3, A9, B3, B4, C4, D2, D3, D4, E2
+    	FROM SPC_FACTOR
+    	<where>
+    		<if test='factSize != null'>
+    			FACTSIZE = ${factSize}
+    		</if>
+    	</where>
+    </select>
+    <select id="getCTQDataForAlarm" parameterType="hashmap" resultType="com.compact.yms.domain.CTQ.dto.CTQAlarm" statementType="PREPARED">
+    	SELECT A.ROW_STAMP AS ROWSTAMP, 'VINA' SITE, P.DIV, P.PRODUCTSPECGROUP, 
+    			A.ITEM_CODE as PRODUCTSPECNAME, A.ITEM_NAME as PRODUCTSPECDESC, A.ITEM1, A.ITEM2, 
+    			A.CHIP_NAME, A.EQUIP, A.MIN_VALUE AS SL, A.MAX_VALUE AS SU, A.CMIN_VALUE, A.CMAX_VALUE 
+		   , A.AVG_VALUE, NVL(A.N, 0) AS N, A.VALUE1  , A.VALUE2, A.VALUE3, A.VALUE4, A.VALUE5, A.VALUE6, A.VALUE7, A.VALUE8, A.VALUE9, A.VALUE10
+		   , A.VALUE11  , A.VALUE12, A.VALUE13, A.VALUE14, A.VALUE15, A.VALUE16, A.VALUE17, A.VALUE18, A.VALUE19, A.VALUE20
+		   , A.VALUE21  , A.VALUE22, A.VALUE23, A.VALUE24, A.VALUE25, A.VALUE26, A.VALUE27, A.VALUE28, A.VALUE29, A.VALUE30
+		   , A.QCOKNG_REASON, TO_CHAR(A.CREATE_DTTM, 'MMDD') AS CTQ_DATE, A.ITEM_GROUP
+		FROM POP_TB_TEST_PULL_HISTORY A, CTQ_COMMON B, CTQ_COMMON C, V_PRODUCTSPEC P
+		WHERE 1=1
+		  AND A.CREATE_DTTM BETWEEN TO_DATE(TO_CHAR(SYSDATE${day}, 'yyyymmdd') || '0000', 'yyyymmddhh24mi') AND TO_DATE(TO_CHAR(SYSDATE, 'yyyymmdd') || '2359', 'yyyymmddhh24mi')
+		<if test="ngFlag != null and ngFlag != ''">
+			<if test='ngFlag == "Y"'>
+				AND A.OKNG_DIV = 'NG'
+			</if>
+		</if>
+		  AND B.GROUPCODE = 'TEST-PROV-VINA'
+		  AND A.PROVISION = B.CODE
+		  AND B.USE = 'Y' AND B.DEL = 'N' AND B.VALUE1 = 'Y'
+		  AND C.GROUPCODE = 'TEST-LOCATE-VINA'
+		  AND A.LOCATE = C.CODE
+		  AND C.USE = 'Y' AND C.DEL = 'N' AND C.VALUE1 = 'Y'
+		  AND A.ITEM_CODE = P.PRODUCTSPECNAME
+		  AND A.N IS NOT NULL
+		  <![CDATA[
+		  AND A.N <> 0
+		  ]]>
+		<if test="itemGroup != null and itemGroup != ''">
+			AND A.ITEM_GROUP = #{itemGroup}
+		</if>
+		<if test="testLocate != null and testLocate != ''">
+			AND A.LOCATE = #{testLocate}
+		</if>
+		<if test="testProv != null and testProv != ''">
+			AND A.PROVISION = #{testProv}
+		</if>
+		<if test="product != null and product != ''">
+			AND A.ITEM_CODE = #{product}
+		</if>
+		ORDER BY ITEM_CODE, A.CREATE_DTTM, PROVISION ASC
+    </select>
+    <select id="getCTQAlarmConfig" parameterType="hashmap" resultType="com.compact.yms.domain.CTQ.dto.CTQAlarmConfig" statementType="PREPARED">
+    	SELECT MAX (DECODE (CODE, 'CPK', VALUE)) AS cpk,
+		       MAX (DECODE (CODE, 'CL', VALUE)) AS cl,
+		       MAX (DECODE (CODE, 'DATADAYS', VALUE)) AS dataDays,
+		       MAX (DECODE (CODE, 'SCHEDULEHOUR', VALUE)) AS scheduleCycleHour,
+		       MAX (DECODE (CODE, 'ALARMTRIGGER', VALUE)) AS alarmTrigger,
+		       MAX (DECODE (CODE, 'DAILYALARM', VALUE)) AS sendDailyAlarmMail,
+		       MAX (DECODE (CODE, 'DAILYALARMTIME', VALUE1)) AS checkStartHour,
+		       MAX (DECODE (CODE, 'DAILYALARMTIME', VALUE2)) AS checkStartMin,
+		       MAX (DECODE (CODE, 'ALL-LOCATION', VALUE)) AS allOfTestLoc,
+		       MAX (DECODE (CODE, 'ALL-PROVISION', VALUE)) AS allOfTestProv,
+		       MAX (DECODE (CODE, 'ALL-PRODUCTS', VALUE)) AS allOfProducts,
+		       MAX (DECODE (CODE, 'CPK-RANGE', VALUE1)) AS cpkRangeStart,
+               MAX (DECODE (CODE, 'CPK-RANGE', VALUE2)) AS cpkRangeEnd
+		  FROM CTQ_COMMON
+		 WHERE     GROUPCODE = 'ALARM'
+		       AND CODE IN
+		              ('CPK',
+		               'CL',
+		               'DATADAYS',
+		               'SCHEDULEHOUR',
+		               'ALARMTRIGGER',
+		               'DAILYALARM',
+		               'DAILYALARMTIME',
+		               'ALL-LOCATION',
+		               'ALL-PROVISION',
+		               'ALL-PRODUCTS',
+		               'CPK-RANGE')
+    </select>
+    <select id="getCTQConfigTestLocation" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	<choose>
+    		<when test='all == "Y"'>
+    			SELECT CODE, VALUE
+				FROM CTQ_COMMON
+				WHERE GROUPCODE = 'TEST-LOCATE-VINA'
+				ORDER BY CODE ASC
+    		</when>
+    		<otherwise>
+    			SELECT CODE, VALUE
+				FROM CTQ_COMMON
+				WHERE GROUPCODE = 'ALARM'
+				  AND VALUE = 'TEST-LOCATE-VINA'
+				ORDER BY CODE ASC
+    		</otherwise>
+    	</choose>
+    </select>
+    <select id="getCTQConfigTestProvision" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		<choose>
+    		<when test='all == "Y"'>
+    			SELECT CODE, VALUE
+				FROM CTQ_COMMON
+				WHERE GROUPCODE = 'TEST-PROV-VINA'
+				ORDER BY CODE ASC
+    		</when>
+    		<otherwise>
+    			SELECT CODE, VALUE
+				FROM CTQ_COMMON
+				WHERE GROUPCODE = 'ALARM'
+				  AND VALUE = 'TEST-PROV-VINA'
+				ORDER BY CODE ASC
+    		</otherwise>
+    	</choose>
+    </select>
+    <select id="getCTQConfigTestProduct" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		<choose>
+    		<when test='all == "Y"'>
+    			SELECT CODE
+				FROM CTQ_COMMON
+				WHERE GROUPCODE = 'PRODUCT-VINA'
+				ORDER BY CODE ASC
+    		</when>
+    		<otherwise>
+    			SELECT CODE
+				FROM CTQ_COMMON
+				WHERE GROUPCODE = 'ALARM'
+				  AND VALUE = 'PRODUCT-VINA'
+				ORDER BY CODE ASC
+    		</otherwise>
+    	</choose>
+    </select>
+    <insert id="addCTQAlarmLog" parameterType="hashmap" statementType="PREPARED">
+    	INSERT INTO CTQ_ALARM_LOG (LOGID, LOGTYPE, LOGDT, VALUE1, VALUE2, VALUE3, VALUE4, VALUE5, VALUE6)
+    	VALUES (#{logId}, #{logType}, SYSDATE, #{value1}, #{value2}, #{value3}, #{value4}, #{value5}, #{value6})
+    </insert>
+    <select id="getCTQAlarmLog" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT LOGID, LOGTYPE, LOGDT, VALUE1, VALUE2, VALUE3, VALUE4, VALUE5, VALUE6
+    	FROM CTQ_ALARM_LOG
+    	<where>
+    		<if test='logId != null'>
+    			AND LOGID = #{logId}
+    		</if>
+    		<if test='logType != null'>
+    			AND LOGTYPE = #{logType}
+    		</if>
+    		<if test='value1 != null'>
+    			AND VALUE1 = #{value1}
+    		</if>
+    		<if test='value2 != null'>
+    			AND VALUE2 = #{value2}
+    		</if>
+    		<if test='value3 != null'>
+    			AND VALUE3 = #{value3}
+    		</if>
+    		<if test='value4 != null'>
+    			AND VALUE4 = #{value4}
+    		</if>
+    		<if test='value5 != null'>
+    			AND VALUE5 = #{value5}
+    		</if>
+    		<if test='value6 != null'>
+    			AND VALUE6 = #{value6}
+    		</if>
+    	</where>
+    </select>
+    <select id="getCTQProductCpkRange" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT VALUE AS PRODUCTSPECNAME, VALUE1 CPK1, VALUE2 CPK2
+		FROM CTQ_COMMON
+		WHERE GROUPCODE = 'ALARM'
+		  AND CODE = 'CPK-ALARM-RANGE'
+		  AND VALUE = #{productSpecName}
+		  AND USE = 'Y'
+		  AND DEL = 'N'
+    </select>
 </mapper>

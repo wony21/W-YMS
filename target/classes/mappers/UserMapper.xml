@@ -8,5 +8,5 @@
     <insert id="AddUserLast" parameterType="com.compact.yms.domain.chipmaster.user.User" statementType="PREPARED">
     	INSERT INTO CM_USER_LAST (USERID, USERNAME)
     	VALUES(#{userId}, #{userName})
-    </insert>    
+    </insert>
 </mapper>

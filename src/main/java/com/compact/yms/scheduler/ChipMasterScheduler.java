@@ -18,7 +18,7 @@ public class ChipMasterScheduler {
 	
 	public Boolean BulkRun = false;
 	
-	@Value("${sch.ctq.daily.cron.enable:true}")
+	@Value("${sch.master.bulk.cron.enable:true}")
 	public Boolean isEnabled;
 	
 	@Scheduled(cron = "${sch.master.bulk.cron}")
