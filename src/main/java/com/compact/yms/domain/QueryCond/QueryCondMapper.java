@@ -16,6 +16,8 @@ public interface QueryCondMapper {
 	public List getProductSpecName(Map<String, Object> parameter);
 	public List getLOTID(Map<String, Object> parameter);
 	public List getMachine(Map<String, Object> parameter);
+	public List getVendor(Map<String, Object> parameter);
+	public List getModel(Map<String, Object> parameter);
 	public List getProgram(Map<String, Object> parameter);
 	public List getTarget(Map<String, Object> parameter);
 	public List getIntensity(Map<String, Object> parameter);

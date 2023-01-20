@@ -155,6 +155,8 @@ public class ConditionController extends BaseController {
 			@RequestParam(required = false) String lotID,
 			@RequestParam(required = false) String lotText, 
 			@RequestParam(required = false) String machine,
+			@RequestParam(required = false) String vendor,
+			@RequestParam(required = false) String model,
 			@RequestParam(required = false) String program, 
 			@RequestParam(required = false) String target,
 			@RequestParam(required = false) String intensity,
@@ -162,6 +164,8 @@ public class ConditionController extends BaseController {
 			@RequestParam(required = false) String frameName,
 			@RequestParam(required = false) String subFrameName,
 			@RequestParam(required = false) String pl) {
+		
+		logger.info("VENDOR[{}] MODEL[{}]", vendor, model);
 
 		if ("stepSeq".equals(type)) {
 			return condService.getStepSeq(startDate, endDate, stepSeq);
@@ -183,31 +187,37 @@ public class ConditionController extends BaseController {
 					productSpecName, lotID);
 			*/
 			return condService.getLOTID(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName,
-					lotID, lotText, machine, program, target, intensity, chipSpec, frameName, pl);
+					lotID, lotText, machine, program, target, intensity, chipSpec, frameName, pl, vendor, model);
 		} else if ("machine".equals(type)) {
 			return condService.getMachine(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine);
+					productSpecName, lotID, lotText, machine, vendor, model);
 		} else if ("program".equals(type)) {
 			return condService.getProgram(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine, program);
+					productSpecName, lotID, lotText, machine, program, vendor, model);
 		} else if ("target".equals(type)) {
 			return condService.getTarget(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine, program, target);
+					productSpecName, lotID, lotText, machine, program, target, vendor, model);
 		} else if ("intensity".equals(type)) {
 			return condService.getIntesity(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine, program, target, intensity);
+					productSpecName, lotID, lotText, machine, program, target, intensity, vendor, model);
 		} else if ("chipSpec".equals(type)) {
 			return condService.getChipSpec(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine, program, target, intensity, chipSpec);
+					productSpecName, lotID, lotText, machine, program, target, intensity, chipSpec, vendor, model);
 		} else if ("frameName".equals(type)) {
 			return condService.getFrameName(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
-					productSpecName, lotID, lotText, machine, program, target, intensity, chipSpec, frameName);
+					productSpecName, lotID, lotText, machine, program, target, intensity, chipSpec, frameName, vendor, model);
 		} else if ("pl".equals(type)) {
 			return condService.getPL(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName,
-					lotID, lotText, machine, program, target, intensity, chipSpec, frameName, pl);
+					lotID, lotText, machine, program, target, intensity, chipSpec, frameName, pl, vendor, model);
 		} else if ("reelBatchId".equals(type)) {
 			return condService.getReelBatchID(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup, productSpecName,
 					lotID, lotText, machine, program, target);
+		} else if ("vendor".equals(type)) {
+			return condService.getVendor(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
+					productSpecName, lotID, lotText, machine);
+		} else if ("model".equals(type)) {
+			return condService.getModel(startDate, endDate, stepSeq, productionType, factoryName, div, productSpecGroup,
+					productSpecName, lotID, lotText, machine, vendor);
 		}
 
 		return ApiResponse.error("일치하는정보없음");

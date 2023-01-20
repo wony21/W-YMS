@@ -22,9 +22,13 @@ public interface AnalysisMapper {
 	
 	public List<ItemName> getMeasureItemNames(Map<String, Object> parameter);
 	
+	public List<ItemName> getMeasureItemNamesTaping(Map<String, Object> parameter);
+	
 	public List<CieNameInfo> getCieXYItemName(Map<String, Object> parameter);
 	
 	public List<FileLocation> getInfo(Map<String, Object> parameter);
+	
+	public List<FileLocation> getInfoTaping(Map<String, Object> parameter);
 	
 	public List<SeperatorData> getSeperatorCIE(Map<String, Object> parameter);
 	

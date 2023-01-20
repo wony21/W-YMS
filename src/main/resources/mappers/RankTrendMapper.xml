@@ -87,6 +87,77 @@
 		  </choose>
 		  )
 	</select>
+	<select id="getMItemTaping" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		<if test='type == "BIN" || type == "NG"'>
+			SELECT 'YIELD' AS VALUE, 'YIELD' AS NAME FROM DUAL UNION ALL
+		</if>
+		SELECT VALUE, NAME FROM (
+		SELECT DISTINCT
+		 	   <choose>
+			     <when test='type == "BIN"'>B.RANKID</when>
+			     <when test='type == "CIE"'>NVL(B.CIE,'-')</when>
+			     <when test='type == "IV"'>NVL(B.INTENSITY,'-')</when>
+			     <when test='type == "VF"'>NVL(B.VF,'-')</when>
+			     <when test='type == "NG"'>NVL(B.SCRAP,'-')</when>
+		 	   </choose>
+			   AS VALUE, 
+			   <choose>
+			     <when test='type == "BIN"'>B.RANKID || '.' || NVL(B.RANKNAME, '-') </when>
+			     <when test='type == "CIE"'>NVL(B.CIE, '-')</when>
+			     <when test='type == "IV"'>NVL(B.INTENSITY, '-')</when>
+			     <when test='type == "VF"'>NVL(B.VF, '-')</when>
+			     <when test='type == "NG"'>B.SCRAP || '.' || NVL(B.RANKNAME, '-') </when>
+		 	   </choose>
+			   AS NAME
+		FROM STD_CALENDAR S,
+		     YMS_FILEINDEX_10Y A,
+		     YMS_FSM_RANK B,
+		     POP_PROCESSGROUP L
+		WHERE S.FACTORYNAME = #{factoryName}
+		  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.TKINTIME BETWEEN TO_DATE(S.STARTTIME,'YYYYMMDDHH24MISS') AND TO_DATE(S.ENDTIME,'YYYYMMDDHH24MISS')
+		  AND A.FMKEY = B.FMKEY
+		  AND A.LOTID = L.PROCESSGROUPNAME
+		  <![CDATA[
+		  AND B.RANKID NOT IN ('-outside', 'YIELD')
+		  ]]>
+		  <if test='type == "NG"'>
+		  AND B.ZPASS = 'N'
+		  </if>
+		  AND A.STEPSEQ = #{stepSeq}
+		  <if test="productionTypes != null">
+			  <foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">#{productionType}</foreach>
+		  </if>
+		  <if test="productSpecGroups != null">
+			  <foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">#{productSpecGroup}</foreach>
+		  </if>
+		  <if test="productSpecNames != null">
+			  <foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">#{productSpecName}</foreach>
+		  </if>
+		  <if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">#{program}</foreach>
+		  </if>
+		  <if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">#{lotId}</foreach>
+		  </if>
+		  <if test='filter != null'>
+			<choose>
+				<when test='type == "BIN"'>AND B.RANKID LIKE '%' || #{filter} || '%'</when>
+				<when test='type == "CIE"'>AND NVL(B.CIE,'-') LIKE '%' || #{filter} || '%'</when>
+				<when test='type == "IV"'>AND NVL(B.INTENSITY,'-') LIKE '%' || #{filter} || '%'</when>
+				<when test='type == "VF"'>AND NVL(B.VF,'-') LIKE '%' || #{filter} || '%'</when>
+				<when test='type == "NG"'>AND NVL(B.SCRAP,'-') LIKE '%' || #{filter} || '%'</when>
+			</choose>
+		  </if>
+		  <choose>
+		     <when test='type == "BIN"'>ORDER BY TO_NUMBER(RANKID) ASC</when>
+		     <when test='type == "CIE"'>ORDER BY NVL(B.CIE,'-') ASC</when>
+		     <when test='type == "IV"'>ORDER BY NVL(B.INTENSITY,'-') ASC</when>
+		     <when test='type == "VF"'>ORDER BY NVL(B.VF,'-') ASC</when>
+		     <when test='type == "NG"'>ORDER BY NVL(B.SCRAP,'-') ASC</when>
+		  </choose>
+		  )
+	</select>
 	<select id="getRankTrendOfSeperator" parameterType="hashmap" 
 										 resultType="com.compact.yms.domain.ranktrend.dto.ResultTableData" statementType="PREPARED">
 		WITH DATA_M
@@ -97,11 +168,11 @@
 		                  A.TKOUTTIME,
 		                  A.STEPSEQ,
 		                  <choose>
-		                  	<when test='type == "BIN"'>B.RANKID</when>
+		                  	<when test='type == "BIN"'>DECODE(B.RANKID, 'YIELD', '', B.RANKID || '.') || B.RANKNAME AS RANKID</when>
 		                  	<when test='type == "CIE"'>B.CIE</when>
 		                  	<when test='type == "IV"'>B.INTENSITY</when>
 		                  	<when test='type == "VF"'>B.VF</when>
-		                  	<when test='type == "NG"'>B.NG</when>
+		                  	<when test='type == "NG"'>DECODE(B.SCRAP, 'YIELD', '', B.SCRAP || '.') || B.RANKNAME AS SCRAP</when>
 		                  </choose>
 		                  ,
 		                  A.EQPID,
@@ -115,7 +186,7 @@
 		                  	<when test='type == "CIE"'>ROUND(SUM (B.PER) OVER (PARTITION BY LOTID, CIE, TKINTIME) * 100, 2) </when>
 		                  	<when test='type == "IV"'>ROUND(SUM (B.PER) OVER (PARTITION BY LOTID, B.INTENSITY, TKINTIME) * 100, 2) </when>
 		                  	<when test='type == "VF"'>ROUND(SUM (B.PER) OVER (PARTITION BY LOTID, VF, TKINTIME) * 100, 2) </when>
-		                  	<when test='type == "NG"'>ROUND(SUM (B.PER) OVER (PARTITION BY LOTID, NG, TKINTIME) * 100, 2) </when>
+		                  	<when test='type == "NG"'>ROUND(SUM (B.PER) OVER (PARTITION BY LOTID, SCRAP, TKINTIME) * 100, 2) </when>
 		                  </choose>
 		                  AS PER,
 		                  SUM (B.QTY) OVER (PARTITION BY LOTID, TKINTIME) AS T_QTY,
@@ -138,7 +209,7 @@
 		                  	</when>
 		                  	<when test='type == "NG"'>
 		                  		SUM (CASE WHEN B.ZPASS = 'Y' THEN B.QTY ELSE 0 END)
-		                     	OVER (PARTITION BY LOTID, NG, TKINTIME ORDER BY NG ASC)
+		                     	OVER (PARTITION BY LOTID, SCRAP, TKINTIME ORDER BY SCRAP ASC)
 		                  	</when>
 		                  </choose>
 		                  AS G_QTY,
@@ -161,7 +232,7 @@
 		                  	</when>
 		                  	<when test='type == "NG"'>
 		                  		SUM (CASE WHEN B.ZPASS = 'N' THEN B.QTY ELSE 0 END)
-						  		OVER (PARTITION BY LOTID, NG, TKINTIME ORDER BY NG ASC)
+						  		OVER (PARTITION BY LOTID, SCRAP, TKINTIME ORDER BY SCRAP ASC)
 		                  	</when>
 		                  </choose>
 		                  AS B_QTY
@@ -202,7 +273,7 @@
 		                  	</when>
 		                  	<when test='type == "NG"'>
 		                  		<if test="filters != null">
-									<foreach item="filter" index="i" collection="filters" open="AND B.BIN IN (" separator="," close=")">#{filter}</foreach>
+									<foreach item="filter" index="i" collection="filters" open="AND B.SCRAP IN (" separator="," close=")">#{filter}</foreach>
 		  				  		</if>
 		                  	</when>
 		                  </choose>
@@ -243,11 +314,11 @@
 		                  A.TKOUTTIME,
 		                  A.STEPSEQ,
 		                  <choose>
-		                  	<when test='type == "BIN"'>B.RANKID</when>
+		                  	<when test='type == "BIN"'>B.RANKID, B.RANKNAME</when>
 		                  	<when test='type == "CIE"'>B.CIE</when>
 		                  	<when test='type == "IV"'>B.INTENSITY</when>
 		                  	<when test='type == "VF"'>B.VF</when>
-		                  	<when test='type == "NG"'>B.NG</when>
+		                  	<when test='type == "NG"'>B.SCRAP, B.RANKNAME</when>
 		                  </choose>
 		                  ,
 		                  B.PER,
@@ -426,7 +497,7 @@
                	<when test='type == "CIE"'>A.CIE</when>
                	<when test='type == "IV"'>A.INTENSITY</when>
                	<when test='type == "VF"'>A.VF</when>
-               	<when test='type == "NG"'>A.NG</when>
+               	<when test='type == "NG"'>A.SCRAP</when>
                </choose>
                AS ITEMID,
 		       NULL AS SLOTNO,
@@ -490,6 +561,397 @@
 		       AND A.LOTID = MI.LOTNAME(+)
 		       AND A.LOTID = T.TEST_CODE(+)
 	</select>
+	
+	<select id="getRankTrendOfSeperatorTaping" parameterType="hashmap" 
+										 resultType="com.compact.yms.domain.ranktrend.dto.ResultTableData" statementType="PREPARED">
+		WITH DATA_M
+		     AS (  SELECT DISTINCT S.FACTORYNAME,
+		                  A.FMKEY,
+		                  A.LOTID,
+		                  A.TKINTIME,
+		                  A.TKOUTTIME,
+		                  A.STEPSEQ,
+		                  <choose>
+		                  	<when test='type == "BIN"'>DECODE(B.RANKID, 'YIELD', '', B.RANKID || '.') || B.RANKNAME AS RANKID</when>
+		                  	<when test='type == "CIE"'>B.CIE</when>
+		                  	<when test='type == "IV"'>B.INTENSITY</when>
+		                  	<when test='type == "VF"'>B.VF</when>
+		                  	<when test='type == "NG"'>DECODE(B.SCRAP, 'YIELD', '', B.SCRAP || '.') || B.RANKNAME AS SCRAP</when>
+		                  </choose>
+		                  ,
+		                  A.EQPID,
+		                  A.DIV,
+		                  A.PRODUCTSPECGROUP,
+		                  A.PRODUCTSPECNAME,
+		                  A.PROGRAM,
+		                  A.LOTTYPE,
+		                  <choose>
+		                  	<when test='type == "BIN"'>ROUND(SUM (B.PER) OVER (PARTITION BY A.LOTID, B.RANKID, A.TKINTIME) * 100, 2) </when>
+		                  	<when test='type == "CIE"'>ROUND(SUM (B.PER) OVER (PARTITION BY A.LOTID, B.CIE, A.TKINTIME) * 100, 2) </when>
+		                  	<when test='type == "IV"'>ROUND(SUM (B.PER) OVER (PARTITION BY A.LOTID, B.INTENSITY, A.TKINTIME) * 100, 2) </when>
+		                  	<when test='type == "VF"'>ROUND(SUM (B.PER) OVER (PARTITION BY A.LOTID, B.VF, A.TKINTIME) * 100, 2) </when>
+		                  	<when test='type == "NG"'>ROUND(SUM (B.PER) OVER (PARTITION BY A.LOTID, B.SCRAP, A.TKINTIME) * 100, 2) </when>
+		                  </choose>
+		                  AS PER,
+		                  SUM (B.QTY) OVER (PARTITION BY LOTID, TKINTIME) AS T_QTY,
+		                  <choose>
+		                  	<when test='type == "BIN"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'Y' THEN B.QTY ELSE 0 END)
+		                     	OVER (PARTITION BY A.LOTID, B.RANKID, A.TKINTIME ORDER BY B.RANKID ASC)
+		                  	</when>
+		                  	<when test='type == "CIE"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'Y' THEN B.QTY ELSE 0 END)
+		                     	OVER (PARTITION BY A.LOTID, B.CIE, A.TKINTIME ORDER BY B.CIE ASC)
+		                  	</when>
+		                  	<when test='type == "IV"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'Y' THEN B.QTY ELSE 0 END)
+		                     	OVER (PARTITION BY A.LOTID, B.INTENSITY, A.TKINTIME ORDER BY B.INTENSITY ASC)
+		                  	</when>
+		                  	<when test='type == "VF"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'Y' THEN B.QTY ELSE 0 END)
+		                     	OVER (PARTITION BY A.LOTID, B.VF, A.TKINTIME ORDER BY B.VF ASC)
+		                  	</when>
+		                  	<when test='type == "NG"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'Y' THEN B.QTY ELSE 0 END)
+		                     	OVER (PARTITION BY A.LOTID, B.SCRAP, A.TKINTIME ORDER BY B.SCRAP ASC)
+		                  	</when>
+		                  </choose>
+		                  AS G_QTY,
+		                  <choose>
+		                  	<when test='type == "BIN"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'N' THEN B.QTY ELSE 0 END)
+						  		OVER (PARTITION BY LOTID, B.RANKID, TKINTIME ORDER BY B.RANKID ASC)
+		                  	</when>
+		                  	<when test='type == "CIE"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'N' THEN B.QTY ELSE 0 END)
+						  		OVER (PARTITION BY LOTID, B.CIE, TKINTIME ORDER BY B.CIE ASC)
+		                  	</when>
+		                  	<when test='type == "IV"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'N' THEN B.QTY ELSE 0 END)
+						  		OVER (PARTITION BY LOTID, B.INTENSITY, TKINTIME ORDER BY B.INTENSITY ASC)
+		                  	</when>
+		                  	<when test='type == "VF"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'N' THEN B.QTY ELSE 0 END)
+						  		OVER (PARTITION BY LOTID, B.VF, TKINTIME ORDER BY VF ASC)
+		                  	</when>
+		                  	<when test='type == "NG"'>
+		                  		SUM (CASE WHEN B.ZPASS = 'N' THEN B.QTY ELSE 0 END)
+						  		OVER (PARTITION BY LOTID, B.SCRAP, TKINTIME ORDER BY B.SCRAP ASC)
+		                  	</when>
+		                  </choose>
+		                  AS B_QTY
+		             FROM STD_CALENDAR S, YMS_FILEINDEX_10Y A, YMS_FSM_RANK B, POP_PROCESSGROUP L
+		            WHERE     S.FACTORYNAME = #{factoryName}
+		                  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		                  AND A.TKINTIME BETWEEN TO_DATE (S.STARTTIME,
+		                                                  'YYYYMMDDHH24MISS')
+		                                     AND TO_DATE (S.ENDTIME,
+		                                                  'YYYYMMDDHH24MISS')
+						  AND A.LOTID = L.PROCESSGROUPNAME
+						  AND L.PROCESSGROUPTYPE = 'ReelBatch'
+						  AND A.FMKEY = B.FMKEY
+		                  AND A.DIV = #{div}
+		                  AND A.STEPSEQ = #{stepSeq}
+		                  <![CDATA[
+		                  	AND B.QTY <> 0
+		                  ]]>
+		                  <choose>
+		                  	<when test='type == "BIN"'>
+		                  		<if test="filters != null">
+									<foreach item="filter" index="i" collection="filters" open="AND B.RANKID IN (" separator="," close=")">#{filter}</foreach>
+		  				  		</if>
+		                  	</when>
+		                  	<when test='type == "CIE"'>
+		                  		<if test="filters != null">
+									<foreach item="filter" index="i" collection="filters" open="AND B.CIE IN (" separator="," close=")">#{filter}</foreach>
+		  				  		</if>
+		                  	</when>
+		                  	<when test='type == "IV"'>
+		                  		<if test="filters != null">
+									<foreach item="filter" index="i" collection="filters" open="AND B.INTENSITY IN (" separator="," close=")">#{filter}</foreach>
+		  				  		</if>
+		                  	</when>
+		                  	<when test='type == "VF"'>
+		                  		<if test="filters != null">
+									<foreach item="filter" index="i" collection="filters" open="AND B.VF IN (" separator="," close=")">#{filter}</foreach>
+		  				  		</if>
+		                  	</when>
+		                  	<when test='type == "NG"'>
+		                  		<if test="filters != null">
+									<foreach item="filter" index="i" collection="filters" open="AND B.RANKID IN (" separator="," close=")">#{filter}</foreach>
+		  				  		</if>
+		                  	</when>
+		                  </choose>
+		                  <if test="productionTypes != null">
+			  				<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">#{productionType}</foreach>
+		  				  </if>
+		                  <if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">#{productSpecGroup}</foreach>
+		  				  </if>
+		  				  <if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">#{productSpecName}</foreach>
+		  				  </if>
+		  				  <if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">#{program}</foreach>
+		  				  </if>
+		  				  <if test="lotIds != null">
+							<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">#{lotId}</foreach>
+		  				  </if>
+		         GROUP BY S.FACTORYNAME,
+		                  A.FMKEY,
+		                  A.LOTID,
+		                  A.TKINTIME,
+		                  A.TKOUTTIME,
+		                  A.STEPSEQ,
+		                  <choose>
+		                  	<when test='type == "BIN"'>B.RANKID, B.RANKNAME</when>
+		                  	<when test='type == "CIE"'>B.CIE</when>
+		                  	<when test='type == "IV"'>B.INTENSITY</when>
+		                  	<when test='type == "VF"'>B.VF</when>
+		                  	<when test='type == "NG"'>B.SCRAP, B.RANKNAME</when>
+		                  </choose>
+		                  ,
+		                  B.PER,
+		                  B.QTY,
+		                  B.ZPASS,
+		                  A.EQPID,
+		                  A.DIV,
+		                  A.PRODUCTSPECGROUP,
+		                  A.PRODUCTSPECNAME,
+		                  A.PROGRAM,
+		                  A.LOTTYPE),
+		     CIEX
+		     AS (SELECT MAX (D.FMKEY)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS FMKEY,
+		                MAX (D.ITEMID)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS ITEMID,
+		                MAX (D.DSTD)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DSTD,
+		                MAX (D.DAVG)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D, POP_ENUMDEFVALUE E
+		          WHERE     A.FMKEY = D.FMKEY
+		                AND E.ENUMNAME = 'CIE-XY-NAME'
+		                AND E.DEFAULTFLAG = 'X'
+		                AND D.ITEMID = E.ENUMVALUE),
+		     CIEY
+		     AS (SELECT MAX (D.FMKEY)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS FMKEY,
+		                MAX (D.ITEMID)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS ITEMID,
+		                MAX (D.DSTD)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DSTD,
+		                MAX (D.DAVG)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D, POP_ENUMDEFVALUE E
+		          WHERE     A.FMKEY = D.FMKEY
+		                AND E.ENUMNAME = 'CIE-XY-NAME'
+		                AND E.DEFAULTFLAG = 'Y'
+		                AND D.ITEMID = E.ENUMVALUE),
+		     IV
+		     AS (SELECT MAX (D.FMKEY)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS FMKEY,
+		                MAX (D.ITEMID)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS ITEMID,
+		                MAX (D.DSTD)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DSTD,
+		                MAX (D.DAVG)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D, POP_ENUMDEFVALUE E
+		          WHERE     A.FMKEY = D.FMKEY
+		                AND E.ENUMNAME = 'Q_STestYield_ITEMID-IV'
+		                AND E.DEFAULTFLAG = 'Y'
+		                AND D.ITEMID = E.ENUMVALUE),
+		     VF
+		     AS (SELECT MAX (D.FMKEY)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS FMKEY,
+		                MAX (D.ITEMID)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   AS ITEMID,
+		                MAX (D.DSTD)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DSTD,
+		                MAX (D.DAVG)
+		                KEEP (DENSE_RANK FIRST ORDER BY ADDITIONALVALUE NULLS LAST)
+		                   DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D, POP_ENUMDEFVALUE E
+		          WHERE     A.FMKEY = D.FMKEY
+		                AND E.ENUMNAME = 'Q_STestYield_ITEMID-VF'
+		                AND E.DEFAULTFLAG = 'Y'
+		                AND D.ITEMID = E.ENUMVALUE),
+		     LMP
+		     AS (SELECT D.FMKEY,
+		                D.ITEMID,
+		                D.DSTD,
+		                D.DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D
+		          WHERE A.FMKEY = D.FMKEY AND D.ITEMID = 'LMP'),
+		     LMD
+		     AS (SELECT D.FMKEY,
+		                D.ITEMID,
+		                D.DSTD,
+		                D.DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D
+		          WHERE A.FMKEY = D.FMKEY AND D.ITEMID = 'LMD'),
+		     CRI
+		     AS (SELECT MAX (D.FMKEY)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   AS FMKEY,
+		                MAX (D.ITEMID)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   AS ITEMID,
+		                MAX (D.DSTD)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   DSTD,
+		                MAX (D.DAVG)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D, POP_ENUMDEFVALUE E
+		          WHERE A.FMKEY = D.FMKEY AND D.ITEMID IN ('CRI', 'CRI(R)')),
+		     R9
+		     AS (SELECT MAX (D.FMKEY)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   AS FMKEY,
+		                MAX (D.ITEMID)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   AS ITEMID,
+		                MAX (D.DSTD)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   DSTD,
+		                MAX (D.DAVG)
+		                KEEP (DENSE_RANK LAST ORDER BY LENGTH (D.ITEMID) NULLS LAST)
+		                   DAVG
+		           FROM DATA_M A, YMS_FSM_ITEM_D D, POP_ENUMDEFVALUE E
+		          WHERE A.FMKEY = D.FMKEY AND D.ITEMID IN ('R9')),
+		     TEST_PULL
+		     AS (SELECT MAX(TEST_CODE) AS TEST_CODE,
+		                MAX(EQUIP) AS EQUIP,
+		                MAX(OKNG_DIV) AS OKNG_DIV,
+		                MAX(AVG_VALUE)
+		                KEEP(DENSE_RANK LAST ORDER BY TEST_CODE_SEQ NULLS LAST) AS AVG_VALUE,
+		                MAX(MIN_VALUE)
+		                KEEP(DENSE_RANK LAST ORDER BY TEST_CODE_SEQ NULLS LAST) AS MIN_VALUE,
+		                MAX(MAX_VALUE)
+		                KEEP(DENSE_RANK LAST ORDER BY TEST_CODE_SEQ NULLS LAST) AS MAX_VALUE,
+		                MAX(MAX_VALUE - MIN_VALUE)
+		                KEEP(DENSE_RANK LAST ORDER BY TEST_CODE_SEQ NULLS LAST) AS MAX_MIN_VALUE
+		           FROM DATA_M A, POP_TB_TEST_PULL_HISTORY B
+		          WHERE     A.LOTID = B.TEST_CODE
+		            AND B.ITEM1 = '제품 높이'
+		            AND B.ITEM2 = 'Height'
+			)
+		SELECT A.FACTORYNAME,
+		       A.LOTID,
+		       A.STEPSEQ,
+		       TO_CHAR(A.TKINTIME, 'YYYY-MM-DD HH24:MI:SS') AS TKINTIME,
+		       TO_CHAR(A.TKOUTTIME, 'YYYY-MM-DD HH24:MI:SS') AS TKOUTTIME,
+		       A.EQPID || '(' || M.DESCRIPTION || ')' AS EQPID,
+		       A.DIV,
+		       A.PRODUCTSPECGROUP,
+		       A.PRODUCTSPECNAME,
+		       A.PROGRAM,
+		       A.LOTTYPE,
+		       NVL(L.TARGET,'-') AS TARGET,
+		       NVL(L.CHIPSPEC,'-') AS CHIPSPEC,
+		       NVL(L.CHIPNAME,'-') AS CHIPNAME,
+		       NVL(L.INTENSITY,'-') AS INTENSITY,
+		       NVL(L.PL,'-') AS PL,
+		       NVL(L.MOLDMACHINENAME,'-') AS MOLDMACHINENAME,
+		       NVL(L.MOLDEVENTUSER,'-') AS MOLDEVENTUSER,
+		       NVL(L.FRAMENAME,'-') AS FRAMENAME,
+		       MI.TOTALPROPORTION,
+		       MI.RATIO1,
+		       MI.PHOSPOR1NAME,
+		       MI.RATIO2,
+		       MI.PHOSPOR2NAME,
+		       MI.RATIO3,
+		       MI.PHOSPOR3NAME,
+		       A.T_QTY TQTY,
+		       A.G_QTY GQTY,
+		       A.B_QTY BQTY,
+		       <choose>
+               	<when test='type == "BIN"'>A.RANKID</when>
+               	<when test='type == "CIE"'>A.CIE</when>
+               	<when test='type == "IV"'>A.INTENSITY</when>
+               	<when test='type == "VF"'>A.VF</when>
+               	<when test='type == "NG"'>A.SCRAP</when>
+               </choose>
+               AS ITEMID,
+		       NULL AS SLOTNO,
+		       ROUND (G_QTY / T_QTY * 100, 2) AS YIELD,
+		       L.AFCMACHINENAME,
+		       L.AFCEVENTUSER,
+		       L.NMMACHINENAME,
+		       L.NMEVENTUSER,
+		       L.BGMACHINENAME,
+		       L.BGEVENTUSER,
+		       T.EQUIP BEQUIP,
+		       T.OKNG_DIV AS OKNGDIV,
+		       T.AVG_VALUE AS AVGVALUE,
+		       T.MIN_VALUE AS MINVALUE,
+		       T.MAX_VALUE AS MAXVALUE,
+		       T.MAX_MIN_VALUE AS MAXMINVALUE,
+		       CIEX.DSTD AS XSTD,
+		       CIEX.DAVG AS XAVG,
+		       CIEY.DSTD AS YSTD,
+		       CIEY.DAVG AS YAVG,
+		       IV.DSTD AS IVSTD,
+		       IV.DAVG AS IVAVG,
+		       VF.DSTD AS VFSTD,
+		       VF.DAVG AS VFAVG,
+		       LMP.DSTD AS LMPSTD,
+		       LMP.DAVG AS LMPAVG,
+		       LMD.DSTD AS LMDSTD,
+		       LMD.DAVG AS LMDAVG,
+		       CRI.DSTD AS CRISTD,
+		       CRI.DAVG AS CRIAVG,
+		       R9.DSTD AS R9STD,
+		       R9.DAVG AS R9AVG,
+		       <choose>
+		       	<when test='opt1 == "PERCENT"'>A.PER</when>
+		       	<when test='opt1 == "COUNT"'>NVL(A.G_QTY, 0) + NVL(A.B_QTY, 0)</when>
+		       </choose>
+		       AS dataValue
+		  FROM DATA_M A,
+		       POP_LOT L,
+		       POP_MACHINESPEC M,
+		       POP_TB_MOLDING_INFO MI,
+		       TEST_PULL T,
+		       CIEX,
+		       CIEY,
+		       IV,
+		       VF,
+		       LMP,
+		       LMD,
+		       CRI,
+		       R9
+		 WHERE     A.FMKEY = CIEX.FMKEY(+)
+		       AND A.FMKEY = CIEY.FMKEY(+)
+		       AND A.FMKEY = IV.FMKEY(+)
+		       AND A.FMKEY = VF.FMKEY(+)
+		       AND A.FMKEY = LMP.FMKEY(+)
+		       AND A.FMKEY = LMD.FMKEY(+)
+		       AND A.FMKEY = CRI.FMKEY(+)
+		       AND A.FMKEY = R9.FMKEY(+)
+		       AND A.EQPID = M.MACHINENAME(+)
+		       AND A.LOTID = L.LOTNAME(+)
+		       AND A.LOTID = MI.LOTNAME(+)
+		       AND A.LOTID = T.TEST_CODE(+)
+	</select>
+	
 	<select id="getRankTrendOfMeasure" parameterType="hashmap" 
 										 resultType="com.compact.yms.domain.ranktrend.dto.ResultMeasureTableData" statementType="PREPARED">
 		WITH DATA_M
@@ -610,6 +1072,112 @@
 		       AND A.LOTID = MI.LOTNAME(+)
 		 ORDER BY A.ITEMID ASC
 	</select>
+	<select id="getRankTrendOfMeasureTaping" parameterType="hashmap" 
+										 resultType="com.compact.yms.domain.ranktrend.dto.ResultMeasureTableData" statementType="PREPARED">
+		WITH DATA_M
+		     AS (SELECT DISTINCT
+		                S.FACTORYNAME,
+		                A.FMKEY,
+		                A.LOTID,
+		                A.TKINTIME,
+		                A.TKOUTTIME,
+		                A.STEPSEQ,
+		                A.EQPID,
+		                A.DIV,
+		                A.PRODUCTSPECGROUP,
+		                A.PRODUCTSPECNAME,
+		                A.PROGRAM,
+		                A.LOTTYPE,
+		                SUM (C.QTY) OVER (PARTITION BY LOTID, TKINTIME) AS T_QTY,
+		                SUM (CASE WHEN C.ZPASS = 'Y' THEN C.QTY ELSE 0 END) OVER (PARTITION BY LOTID, B.ITEMID, TKINTIME) AS G_QTY,
+		                SUM (CASE WHEN C.ZPASS = 'N' THEN C.QTY ELSE 0 END) OVER (PARTITION BY LOTID, B.ITEMID, TKINTIME ORDER BY B.ITEMID ASC) AS B_QTY,
+		                B.ITEMID,
+		                <choose>
+			               	<when test='type == "AVG"'>B.DAVG </when>
+			               	<when test='type == "STD"'>B.DSTD </when>
+			               	<when test='type == "MEDIAN"'>B.DMEDIAN </when>
+			            </choose>
+		                AS DATAVALUE
+		           FROM STD_CALENDAR S,
+		                YMS_FILEINDEX_10Y A,
+		                YMS_FSM_ITEM_D B,
+		                YMS_FSM_RANK C,
+		                POP_PROCESSGROUP L
+		          WHERE     S.FACTORYNAME = #{factoryName}
+		                  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		                  AND A.TKINTIME BETWEEN TO_DATE (S.STARTTIME,
+		                                                  'YYYYMMDDHH24MISS')
+		                                     AND TO_DATE (S.ENDTIME,
+		                                                  'YYYYMMDDHH24MISS')
+						  AND A.LOTID = L.PROCESSGROUPNAME
+						  AND L.PROCESSGROUPTYPE = 'ReelBatch'
+						  AND A.FMKEY = B.FMKEY
+						  AND A.FMKEY = C.FMKEY
+		                  AND A.DIV = #{div}
+		                  AND A.STEPSEQ = #{stepSeq}
+		                  AND C.RANKID NOT IN ('YIELD')
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">#{productionType}</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">#{productSpecGroup}</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">#{productSpecName}</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">#{program}</foreach>
+						</if>
+						<if test="lotIds != null">
+							<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">#{lotId}</foreach>
+						</if>
+						<if test="items != null">
+							<foreach item="item" index="i" collection="items" open="AND B.ITEMID IN (" separator="," close=")">#{item}</foreach>
+						</if>
+		                )
+		SELECT A.FACTORYNAME,
+		       A.LOTID,
+		       A.STEPSEQ,
+		       TO_CHAR (A.TKINTIME, 'YYYY-MM-DD HH24:MI:SS') AS TKINTIME,
+		       TO_CHAR (A.TKOUTTIME, 'YYYY-MM-DD HH24:MI:SS') AS TKOUTTIME,
+		       A.EQPID || '(' || M.DESCRIPTION || ')' AS EQPID,
+		       A.DIV,
+		       A.PRODUCTSPECGROUP,
+		       A.PRODUCTSPECNAME,
+		       A.PROGRAM,
+		       A.LOTTYPE,
+		       NVL(L.TARGET,'-') AS TARGET,
+		       NVL(L.CHIPSPEC,'-') AS CHIPSPEC,
+		       NVL(L.CHIPNAME,'-') AS CHIPNAME,
+		       NVL(L.INTENSITY,'-') AS INTENSITY,
+		       NVL(L.PL,'-') AS PL,
+		       NVL(L.MOLDMACHINENAME,'-') AS MOLDMACHINENAME,
+		       NVL(L.MOLDEVENTUSER,'-') AS MOLDEVENTUSER,
+		       NVL(L.AFCMACHINENAME,'-') AS AFCMACHINENAME,
+		       NVL(L.AFCEVENTUSER,'-') AS AFCEVENTUSER,
+		       NVL(L.FRAMENAME,'-') AS FRAMENAME,
+		       MI.TOTALPROPORTION,
+		       MI.RATIO1,
+		       MI.PHOSPOR1NAME,
+		       MI.RATIO2,
+		       MI.PHOSPOR2NAME,
+		       MI.RATIO3,
+		       MI.PHOSPOR3NAME,
+		       A.T_QTY TQTY,
+		       A.G_QTY GQTY,
+		       A.B_QTY BQTY,
+		       ROUND (G_QTY / T_QTY * 100, 2) AS YIELD,
+		       A.ITEMID,
+		       A.DATAVALUE
+		  FROM DATA_M A,
+		       POP_LOT L,
+		       POP_MACHINESPEC M,
+		       POP_TB_MOLDING_INFO MI
+		 WHERE     A.EQPID = M.MACHINENAME(+)
+		       AND A.LOTID = L.LOTNAME(+)
+		       AND A.LOTID = MI.LOTNAME(+)
+		 ORDER BY A.ITEMID ASC
+	</select>
 	<select id="getRankTrendOfBoth" parameterType="hashmap" 
 										 resultType="com.compact.yms.domain.ranktrend.dto.ResultBothTableData" statementType="PREPARED">
 		WITH DATA_M
@@ -641,8 +1209,8 @@
 		                                                  'YYYYMMDDHH24MISS')
 		                                     AND TO_DATE (S.ENDTIME,
 		                                                  'YYYYMMDDHH24MISS')
-						  AND A.LOTID = L.LOTNAME
 						  AND A.FMKEY = B.FMKEY
+						  AND A.LOTID = L.LOTNAME
 		                  AND A.DIV = #{div}
 		                  AND A.STEPSEQ = #{stepSeq}
 						<if test="productionTypes != null">
@@ -721,6 +1289,106 @@
 		       AND A.LOTID = MI.LOTNAME(+)
 		 ORDER BY A.ITEMID ASC
 	</select>
+	<select id="getRankTrendOfBothTaping" parameterType="hashmap" 
+										 resultType="com.compact.yms.domain.ranktrend.dto.ResultBothTableData" statementType="PREPARED">
+		WITH DATA_M
+		     AS (SELECT DISTINCT
+		                S.FACTORYNAME,
+		                A.FMKEY,
+		                A.LOTID,
+		                A.TKINTIME,
+		                A.TKOUTTIME,
+		                A.STEPSEQ,
+		                A.EQPID,
+		                A.DIV,
+		                A.PRODUCTSPECGROUP,
+		                A.PRODUCTSPECNAME,
+		                A.PROGRAM,
+		                A.LOTTYPE,
+		                #{type} AS TYPE,
+		                #{itemName} AS ITEMID,
+		                B.ITEMNAME AS MEASUREID,
+		                NULL AS DATAVALUE,
+		                REPLACE(A.REMOTEFILENAME, '\', '/') AS REMOTEFILENAME
+		           FROM STD_CALENDAR S,
+		                YMS_FILEINDEX_10Y A,
+		                YMS_MEASUREITEMNAME B,
+		                POP_PROCESSGROUP L
+		          WHERE     S.FACTORYNAME = #{factoryName}
+		                  AND S.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		                  AND A.TKINTIME BETWEEN TO_DATE (S.STARTTIME,
+		                                                  'YYYYMMDDHH24MISS')
+		                                     AND TO_DATE (S.ENDTIME,
+		                                                  'YYYYMMDDHH24MISS')
+						  AND A.FMKEY = B.FMKEY
+						  AND A.LOTID = L.PROCESSGROUPNAME
+						  AND L.PROCESSGROUPTYPE = 'ReelBatch'
+		                  AND A.DIV = #{div}
+		                  AND A.STEPSEQ = #{stepSeq}
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">#{productionType}</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">#{productSpecGroup}</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">#{productSpecName}</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">#{program}</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">#{pl}</foreach>
+						</if>
+						<if test="lotIds != null">
+							<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">#{lotId}</foreach>
+						</if>
+						<if test="measureItems != null">
+							<foreach item="item" index="i" collection="measureItems" open="AND B.ITEMNAME IN (" separator="," close=")">#{item}</foreach>
+						</if>
+		                )
+		SELECT A.FACTORYNAME,
+		       A.LOTID,
+		       A.STEPSEQ,
+		       TO_CHAR (A.TKINTIME, 'YYYY-MM-DD HH24:MI:SS') AS TKINTIME,
+		       TO_CHAR (A.TKOUTTIME, 'YYYY-MM-DD HH24:MI:SS') AS TKOUTTIME,
+		       A.EQPID || '(' || M.DESCRIPTION || ')' AS EQPID,
+		       A.DIV,
+		       A.PRODUCTSPECGROUP,
+		       A.PRODUCTSPECNAME,
+		       A.PROGRAM,
+		       A.LOTTYPE,
+		       NVL(L.TARGET,'-') AS TARGET,
+		       NVL(L.CHIPSPEC,'-') AS CHIPSPEC,
+		       NVL(L.CHIPNAME,'-') AS CHIPNAME,
+		       NVL(L.INTENSITY,'-') AS INTENSITY,
+		       NVL(L.PL,'-') AS PL,
+		       NVL(L.MOLDMACHINENAME,'-') AS MOLDMACHINENAME,
+		       NVL(L.MOLDEVENTUSER,'-') AS MOLDEVENTUSER,
+		       NVL(L.AFCMACHINENAME,'-') AS AFCMACHINENAME,
+		       NVL(L.AFCEVENTUSER,'-') AS AFCEVENTUSER,
+		       NVL(L.FRAMENAME,'-') AS FRAMENAME,
+		       MI.TOTALPROPORTION,
+		       MI.RATIO1,
+		       MI.PHOSPOR1NAME,
+		       MI.RATIO2,
+		       MI.PHOSPOR2NAME,
+		       MI.RATIO3,
+		       MI.PHOSPOR3NAME,
+		       A.TYPE,
+		       A.ITEMID,
+		       A.MEASUREID,
+		       A.DATAVALUE,
+		       A.REMOTEFILENAME
+		  FROM DATA_M A,
+		       POP_LOT L,
+		       POP_MACHINESPEC M,
+		       POP_TB_MOLDING_INFO MI
+		 WHERE     A.EQPID = M.MACHINENAME(+)
+		       AND A.LOTID = L.LOTNAME(+)
+		       AND A.LOTID = MI.LOTNAME(+)
+		 ORDER BY A.ITEMID ASC
+	</select>
 	<select id="getBinNo" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
 		SELECT ZBINNO AS BINNO 
 		FROM POP_ERP_SEPERATOR
@@ -745,6 +1413,36 @@
 		     </when>
 	 	  </choose>
 	 	  ORDER BY TO_NUMBER(ZBINNO) ASC
+	</select>
+	<select id="getBinNoTaping" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT DISTINCT RANKID as BINNO
+		FROM YMS_FSM_RANK
+		WHERE FMKEY IN (SELECT DISTINCT FMKEY 
+						FROM YMS_FILEINDEX_10Y
+						WHERE PRODUCTSPECNAME = #{productSpecName}
+						  AND PROGRAM = #{program}
+						  AND FACTORYDATE BETWEEN #{startDate} AND #{endDate})
+		  <![CDATA[
+				AND RANKID <> '-outside'
+		  ]]>
+		  <choose>
+		     <when test='type == "BIN"'>
+		     	<foreach item="filter" index="i" collection="filters" open="AND NVL(RANKID, '-') IN (" separator="," close=")">#{filter}</foreach>
+		     </when>
+		     <when test='type == "CIE"'>
+		     	<foreach item="filter" index="i" collection="filters" open="AND NVL(CIE, '-') IN (" separator="," close=")">#{filter}</foreach>
+		     </when>
+		     <when test='type == "IV"'>
+		     	<foreach item="filter" index="i" collection="filters" open="AND NVL(INTENSITY, '-') IN (" separator="," close=")">#{filter}</foreach>
+		     </when>
+		     <when test='type == "VF"'>
+		     	<foreach item="filter" index="i" collection="filters" open="AND NVL(VF, '-') IN (" separator="," close=")">#{filter}</foreach>
+		     </when>
+		     <when test='type == "NG"'>
+		     	<foreach item="filter" index="i" collection="filters" open="AND NVL(RANKID, '-') IN (" separator="," close=")">#{filter}</foreach>
+		     </when>
+	 	  </choose>
+	 	  ORDER BY RANKID ASC
 	</select>
 	<select id="getRankName" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
 		SELECT ENUMVALUE AS RANK_NAME

@@ -41,6 +41,9 @@ public class CTQAlarmScheduler {
 
 	Boolean isRunned = false;
 
+	@Value("${sch.ctq.ng.cron.enable:true}")
+	public Boolean isEnabled;
+
 	@Value("${ctq.ng.mail.tmpl.css}")
 	String mailTmplCSS;
 	@Value("${ctq.ng.mail.tmpl.body.cpk}")
@@ -58,9 +61,12 @@ public class CTQAlarmScheduler {
 	@Scheduled(cron = "${sch.ctq.alram.cron}")
 	public void RunSchedule() {
 
+		if (!isEnabled)
+			return;
+		
 		if (isRunned)
 			return;
-
+		
 		isRunned = true;
 
 		log.info("********************** CTQ ALARM SCHEDULE RUN **********************");
@@ -93,7 +99,7 @@ public class CTQAlarmScheduler {
 
 			if (!IsScheduleTime(checkStartHour, checkStartMin, cycleHour)) {
 				log.info("Not execution schedule time!!!");
-				// return;
+				return;
 			}
 
 			log.info("////////////////// CTQ ALARM CHECK START //////////////////");

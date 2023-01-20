@@ -182,8 +182,12 @@ public class AnalysisService extends BaseService {
 		setArrayParam(parameter, "frameNames", frameName);
 		setArrayParam(parameter, "pls", pl);
 		setArrayParam(parameter, "lotIds", lotID);
-		List<FileLocation> list = mapper.getInfo(parameter);
-
+		List<FileLocation> list = null;
+        if (stepSeq.equals("TP")) {
+        	list = mapper.getInfoTaping(parameter);
+        } else {
+        	list = mapper.getInfo(parameter);
+        }
 		logger.info("Start file downloading FileCount[{}]", list.size());
 
 		FTPClient ftpClient = ftpUtils.connect();
@@ -510,6 +514,9 @@ public class AnalysisService extends BaseService {
 	public List<SeperatorData> getSeperatorCie(String factoryName, String productSpecName, String program) {
 		Map<String, Object> parameter = new HashMap<String, Object>();
 		parameter.put("factoryName", factoryName);
+		if (productSpecName.startsWith("7")) {
+			productSpecName = "6" + productSpecName.substring(1, productSpecName.length()) + "L";
+		}
 		parameter.put("productSpecName", productSpecName);
 		parameter.put("program", program);
 		return mapper.getSeperatorCIE(parameter);
@@ -548,7 +555,11 @@ public class AnalysisService extends BaseService {
 		setArrayParam(parameter, "programs", program);
 		setArrayParam(parameter, "targets", target);
 		setArrayParam(parameter, "pls", pl);
-		return mapper.getMeasureItemNames(parameter);
+		if (stepSeq.contains("TP")) {
+			return mapper.getMeasureItemNamesTaping(parameter);
+		} else {
+			return mapper.getMeasureItemNames(parameter);
+		}
 	}
 
 	public ShareReturnData calculatorShareData(String startDate, String endDate, String factoryName, String div,

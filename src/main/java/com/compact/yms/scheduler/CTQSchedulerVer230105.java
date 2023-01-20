@@ -384,8 +384,8 @@ public class CTQSchedulerVer230105 {
 						sendType, onlyNG, rowCount, runHour, runMin));
 
 				// 스케쥴 지정 시간이 아니면 수행 종료
-				// if (!isScheduleIsRunnableTime(runHour, runMin))
-				// continue;
+				if (!isScheduleIsRunnableTime(runHour, runMin))
+					continue;
 
 				List<Map<String, String>> mailItems = null;
 				logger.info(String.format("GROUPID[%s] ALL-PRODUCT-FLAG[%s]", groupId, all));

@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.List;
 
+import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.compact.yms.common.BaseController;
+import com.compact.yms.common.CamelCaseMap;
 import com.compact.yms.common.api.ApiResponse;
 import com.compact.yms.domain.analysis.DTO.ShareReturnData;
 import com.compact.yms.domain.ranktrend.RankTrendService;
@@ -223,7 +225,7 @@ public class RankTrendController extends BaseController {
 						   @RequestParam String dataName) {
 
 		LocalTime start = LocalTime.now();
-		List data = null;
+		List<CamelCaseMap> data = null;
 		try {
 			
 			data = rankTrendService.CDF(dataTable, groupName, subGroupName, labelName, dataName);
@@ -238,6 +240,32 @@ public class RankTrendController extends BaseController {
 		logger.info("duration [{}] sec(s)", duration.getSeconds());
 
 		return ApiResponse.success("OK", "CDF", data, duration.getSeconds());
+	}
+	
+	@RequestMapping(value = "/anay/boxplot", method = RequestMethod.POST)
+	@ResponseBody
+	public ApiResponse BoxPlot(@RequestParam String dataTable,
+						   @RequestParam String groupName,
+						   @RequestParam String subGroupName,
+						   @RequestParam String labelName,
+						   @RequestParam String dataName) {
+
+		LocalTime start = LocalTime.now();
+		List<CamelCaseMap> data = null;
+		try {
+			
+			data = rankTrendService.getBoxPlot(dataTable, groupName, subGroupName, labelName, dataName);
+			
+		} catch(Exception e) {
+			return ApiResponse.error(e.getMessage());
+		}
+		
+		LocalTime end = LocalTime.now();
+		Duration duration = Duration.between(start, end);
+
+		logger.info("duration [{}] sec(s)", duration.getSeconds());
+
+		return ApiResponse.success("OK", "BOXPLOT", data, duration.getSeconds());
 	}
 	
 }

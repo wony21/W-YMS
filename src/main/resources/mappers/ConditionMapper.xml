@@ -362,4 +362,5 @@
 		  </if>
 		ORDER BY A.LOTID ASC
     </select>
+    
 </mapper>

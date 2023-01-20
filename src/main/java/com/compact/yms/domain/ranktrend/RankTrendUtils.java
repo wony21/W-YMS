@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
@@ -125,6 +126,7 @@ public class RankTrendUtils {
 			logger.error("Cannot found rankId.");
 			return null;
 		}
+
 		// ----------------------------------------------------------
 		// 측정값 데이터를 추출
 		// ----------------------------------------------------------
@@ -137,20 +139,25 @@ public class RankTrendUtils {
 
 				String binNo = itemParams[rankColIndex];
 
+				// logger.info("FileBinNo[{}] RankIds{} -- [{}]", new Object[] { binNo,
+				// ArrayUtils.toString(rankIds), rankIds.get(0) });
+
 				if (rankIds.contains(binNo)) {
 
+					// logger.info("BinNo[{}] Found!!!", binNo);
 					for (int j = 0; j < itemParams.length; j++) {
 
 						String itemName = contentLines[itemNameIndex].split(",")[j];
 
 						if (measureItems.contains(itemName)) {
-
+							// logger.info("MeasureItemname[{}] Found!!!", measureItems);
 							Double measureValue = NumberUtils.toDouble(itemParams[j], -99999);
 
 							if (measureValue != -99999) {
 
 								if (map.containsKey(itemName)) {
 									List<Double> dataValues = map.get(itemName);
+									logger.info("measureValue data add!!");
 									dataValues.add(measureValue);
 								}
 							}
@@ -168,26 +175,27 @@ public class RankTrendUtils {
 	}
 
 	public static Map<String, Double> statisticsDataMap(Map<String, List<Double>> map, Stat mode) {
-		
+
 		Map<String, Double> dataMap = new HashMap<>();
 
 		for (String keyValue : map.keySet()) {
-			
+
 			Double dataValue = 0d;
 			List<Double> dataList = map.get(keyValue);
-			
-			if ( dataList.size() > 0) {
-				
+			logger.info("Both statistics ITEM[{}] COUNT[{}]", new Object[] {
+					keyValue, dataList.size() });
+			if (dataList.size() > 0) {
+
 				if (mode.equals(Stat.Avg)) {
 					dataValue = dataList.stream().mapToDouble(Double::doubleValue).average().getAsDouble();
 				} else if (mode.equals(Stat.Std)) {
 					Collections.sort(dataList);
-					double[] sortedData = dataList.stream().mapToDouble(i->i).toArray();
+					double[] sortedData = dataList.stream().mapToDouble(i -> i).toArray();
 					StandardDeviation std = new StandardDeviation();
 					dataValue = std.evaluate(sortedData);
 				} else if (mode.equals(Stat.Median)) {
 					Collections.sort(dataList);
-					double[] sortedData = dataList.stream().mapToDouble(i->i).toArray();
+					double[] sortedData = dataList.stream().mapToDouble(i -> i).toArray();
 					Median median = new Median();
 					dataValue = median.evaluate(sortedData);
 				}

@@ -290,7 +290,7 @@
     </select>
     <select id="requestSendMailInMailId" parameterType="hashmap" statementType="CALLABLE">
     	{
-    		call SEND_CTQ_MAIL_DAY_vTest
+    		call SEND_CTQ_MAIL_DAY_v2
     		(
     			#{mailId, mode=IN, jdbcType=INTEGER}
     		)

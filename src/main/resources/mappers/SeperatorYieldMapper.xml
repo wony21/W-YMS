@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.yms.domain.qm.yield.seperator.SeperatorYieldMapper">
+	<select id="getChartLabel" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT 0 AS SORTIDX, '평균수율' AS LABEL FROM DUAL
+		UNION ALL
+		SELECT DISTINCT 1 AS SORTIDX, FACTORYMONTH 
+		FROM STD_CALENDAR 
+		WHERE FACTORYNAME = #{factoryName}
+		  AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+		  				       AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+		UNION ALL 
+		SELECT 2 AS SORTIDX, '기간합' AS LABEL 
+		FROM DUAL
+		UNION ALL 
+		SELECT DISTINCT 3 AS SORTIDX, FACTORYDATE 
+		FROM STD_CALENDAR 
+		WHERE FACTORYNAME = #{factoryName}
+		  AND FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		ORDER BY 1, 2
+	</select>
+    <select id="getSeperatorYield" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT 0 AS TP,
+		       '평균수율' AS LABEL,
+		       SUM(GQTY) AS GQTY,
+		       SUM(TQTY - GQTY) AS BQTY,
+		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
+		FROM YMS_FILE_PRDYIELD A
+		WHERE A.FACTORYNAME = #{factoryName}
+		  AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+		  				       AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+		  AND A.STEPSEQ = 'TT'
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productGroups != null">
+			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
+				#{productGroup}
+			</foreach>
+		</if>
+		<if test="productSpecName != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+		UNION ALL
+		SELECT 1 AS TP,
+		       FACTORYMONTH AS LABEL,
+		       SUM(GQTY) AS GQTY,
+		       SUM(TQTY - GQTY) AS BQTY,
+		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
+		FROM YMS_FILE_PRDYIELD A
+		WHERE A.FACTORYNAME = #{factoryName}
+		  AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+		  					   AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+		  AND A.STEPSEQ = 'TT'
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productGroups != null">
+			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
+				#{productGroup}
+			</foreach>
+		</if>
+		<if test="productSpecName != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+		GROUP BY FACTORYMONTH
+		UNION ALL
+		SELECT 2 AS TP,
+		       '기간합' AS LABEL,
+		       SUM(GQTY) AS GQTY,
+		       SUM(TQTY - GQTY) AS BQTY,
+		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
+		FROM YMS_FILE_PRDYIELD A
+		WHERE A.FACTORYNAME = #{factoryName}
+		  AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.STEPSEQ = 'TT'
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productGroups != null">
+			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
+				#{productGroup}
+			</foreach>
+		</if>
+		<if test="productSpecName != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+		UNION ALL
+		SELECT 3 AS TP,
+		       FACTORYDATE,
+		       SUM(GQTY) AS GQTY,
+		       SUM(TQTY - GQTY) AS BQTY,
+		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
+		FROM YMS_FILE_PRDYIELD A
+		WHERE A.FACTORYNAME = #{factoryName}
+		  AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.STEPSEQ = 'TT'
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productGroups != null">
+			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
+				#{productGroup}
+			</foreach>
+		</if>
+		<if test="productSpecName != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+		GROUP BY A.FACTORYDATE
+		ORDER BY 1, 2
+    </select>
+</mapper>
