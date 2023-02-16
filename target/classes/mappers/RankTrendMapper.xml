@@ -3,18 +3,10 @@
 <mapper namespace="com.compact.yms.domain.ranktrend.RankTrendMapper">
 	<select id="getMItem" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
 		<if test='type == "BIN" || type == "NG"'>
-			SELECT 'YIELD' AS VALUE, 'YIELD' AS NAME FROM DUAL UNION ALL
+			SELECT 'YIELD' AS NAME, 'YIELD' AS VALUE FROM DUAL UNION ALL
 		</if>
-		SELECT VALUE, NAME FROM (
+		SELECT NAME, VALUE FROM (
 		SELECT DISTINCT
-		 	   <choose>
-			     <when test='type == "BIN"'>B.RANKID</when>
-			     <when test='type == "CIE"'>NVL(B.CIE,'-')</when>
-			     <when test='type == "IV"'>NVL(B.INTENSITY,'-')</when>
-			     <when test='type == "VF"'>NVL(B.VF,'-')</when>
-			     <when test='type == "NG"'>NVL(B.SCRAP,'-')</when>
-		 	   </choose>
-			   AS VALUE, 
 			   <choose>
 			     <when test='type == "BIN"'>B.RANKID || '.' || NVL(B.RANKNAME, '-') </when>
 			     <when test='type == "CIE"'>NVL(B.CIE, '-')</when>
@@ -22,7 +14,15 @@
 			     <when test='type == "VF"'>NVL(B.VF, '-')</when>
 			     <when test='type == "NG"'>B.SCRAP || '.' || NVL(B.RANKNAME, '-') </when>
 		 	   </choose>
-			   AS NAME
+			   AS NAME,
+			   <choose>
+			     <when test='type == "BIN"'>B.RANKID</when>
+			     <when test='type == "CIE"'>NVL(B.CIE,'-')</when>
+			     <when test='type == "IV"'>NVL(B.INTENSITY,'-')</when>
+			     <when test='type == "VF"'>NVL(B.VF,'-')</when>
+			     <when test='type == "NG"'>NVL(B.SCRAP,'-')</when>
+		 	   </choose>
+			   AS VALUE
 		FROM STD_CALENDAR S,
 		     YMS_FILEINDEX_10Y A,
 		     YMS_FSM_RANK B,
@@ -89,18 +89,10 @@
 	</select>
 	<select id="getMItemTaping" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
 		<if test='type == "BIN" || type == "NG"'>
-			SELECT 'YIELD' AS VALUE, 'YIELD' AS NAME FROM DUAL UNION ALL
+			SELECT 'YIELD' AS NAME, 'YIELD' AS VALUE FROM DUAL UNION ALL
 		</if>
-		SELECT VALUE, NAME FROM (
+		SELECT NAME, VALUE FROM (
 		SELECT DISTINCT
-		 	   <choose>
-			     <when test='type == "BIN"'>B.RANKID</when>
-			     <when test='type == "CIE"'>NVL(B.CIE,'-')</when>
-			     <when test='type == "IV"'>NVL(B.INTENSITY,'-')</when>
-			     <when test='type == "VF"'>NVL(B.VF,'-')</when>
-			     <when test='type == "NG"'>NVL(B.SCRAP,'-')</when>
-		 	   </choose>
-			   AS VALUE, 
 			   <choose>
 			     <when test='type == "BIN"'>B.RANKID || '.' || NVL(B.RANKNAME, '-') </when>
 			     <when test='type == "CIE"'>NVL(B.CIE, '-')</when>
@@ -108,7 +100,15 @@
 			     <when test='type == "VF"'>NVL(B.VF, '-')</when>
 			     <when test='type == "NG"'>B.SCRAP || '.' || NVL(B.RANKNAME, '-') </when>
 		 	   </choose>
-			   AS NAME
+			   AS NAME,
+			   <choose>
+			     <when test='type == "BIN"'>B.RANKID</when>
+			     <when test='type == "CIE"'>NVL(B.CIE,'-')</when>
+			     <when test='type == "IV"'>NVL(B.INTENSITY,'-')</when>
+			     <when test='type == "VF"'>NVL(B.VF,'-')</when>
+			     <when test='type == "NG"'>NVL(B.SCRAP,'-')</when>
+		 	   </choose>
+			   AS VALUE
 		FROM STD_CALENDAR S,
 		     YMS_FILEINDEX_10Y A,
 		     YMS_FSM_RANK B,

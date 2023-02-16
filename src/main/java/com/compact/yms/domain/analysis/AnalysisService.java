@@ -535,6 +535,18 @@ public class AnalysisService extends BaseService {
 		}
 		return null;
 	}
+	
+	public CieNameInfo getBinItemName(List<String> itemNames) {
+		Map<String, Object> parameter = new HashMap<String, Object>();
+		parameter.put("binArr", itemNames);
+		List<CieNameInfo> info = mapper.getBinItemName(parameter);
+		if (info != null) {
+			if (info.size() > 0) {
+				return info.get(0);
+			}
+		}
+		return null;
+	}
 
 	/*****************************************************************************
 	 * 분석 로직

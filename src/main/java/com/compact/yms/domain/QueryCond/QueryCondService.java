@@ -117,7 +117,12 @@ public class QueryCondService extends BaseService {
 		//setArrayParam(parameter, "productSpecNames", productSpecName);
 		parameter.put("productSpecName", productSpecName);
 		setArrayParam(parameter, "opt", "1");
-		List<SearchCondObj> list = mapper.getProductSpecName(parameter);
+		List<SearchCondObj> list = null;
+		if ( stepSeq.contains("TP")) {
+			list = mapper.getProductSpecNameTP(parameter);
+		} else {
+			list = mapper.getProductSpecName(parameter);
+		}
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
 	}
@@ -135,6 +140,11 @@ public class QueryCondService extends BaseService {
 		setArrayParam(parameter, "productSpecNames", productSpecName);
 		setArrayParam(parameter, "lotId", lot);
 		List<SearchCondObj> list = mapper.getLOTID(parameter);
+		if ( stepSeq.contains("TP")) {
+			list = mapper.getReelBatchID(parameter);
+		} else {
+			list = mapper.getLOTID(parameter);
+		}
 //		preSettingList(list);
 		return ApiResponse.success("OK", list);
 	}

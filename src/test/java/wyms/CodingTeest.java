@@ -2,11 +2,11 @@ package wyms;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
@@ -22,14 +22,21 @@ public class CodingTeest {
 	
 	@Test
 	public void CycleTimeTest() throws ParseException {
-		int hour = 8;
-		int delay = 12;
-		int count = 24/delay;
-		Date date1 = DateUtils.parseDate(String.format("%02d00", hour), "HHmm");
-		for(int i=0; i < count; i++) {
-			Date scheduleHour = DateUtils.addHours(date1, delay * i);
-			log.info("{}", DateFormatUtils.format(scheduleHour, "HH:mm"));
-		}
+		List<Map<String, Object>> maps = new ArrayList<>();
+		Map<String, Object> map = new HashMap<>();
+		map.put("val", null);
+		maps.add(map);
+		
+		Double data = MapUtils.getDouble(map, "val");
+		log.info("{}", data);
+		
+		long count = maps.stream().filter(o -> MapUtils.getDouble(o, "val") != null).count();
+		log.info("count[{}]", count);
+		
+		Double dval = (count > 0) ? (maps.stream().mapToDouble(o -> MapUtils.getDouble(o, "val")).findFirst().orElse(-99999d)) : (-99999d);
+		
+		log.info("{}", dval);
+		
 	}
 	
 	//@Test

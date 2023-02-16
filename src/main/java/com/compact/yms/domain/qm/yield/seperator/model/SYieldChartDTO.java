@@ -9,5 +9,6 @@ public class SYieldChartDTO {
 
 	List label;
 	List yield;
+	List table;
 	
 }

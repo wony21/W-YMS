@@ -60,11 +60,17 @@ public class SPCObject1 {
 
 	public void calculator() {
 
-		if (dataValues == null)
+		if (dataValues == null) {
+			log.error("dataValue is Null!!");
 			return;
-		if (dataValues.isEmpty())
+		}
+			
+		if (dataValues.isEmpty()) {
+			log.error("dataValue is Empty!!");
 			return;
+		}
 
+		//log.info("addValue!!!");
 		SummaryStatistics stats = new SummaryStatistics();
 		for (Double d : dataValues) {
 			stats.addValue(d);
@@ -72,23 +78,23 @@ public class SPCObject1 {
 
 		long n = stats.getN();
 		this.setGroupSize(n);
-		// log.info("groupsize");
+		//log.info("groupsize");
 
 		Double x = stats.getMean();
 		this.setMean(x);
-		// log.info("average");
+		//log.info("average");
 
 		Double r = stats.getMax() - stats.getMin();
 		this.setRange(r);
-		// log.info("range");
+		//log.info("range");
 
 		Double v = stats.getVariance();
 		this.setVarience(v);
-		// log.info("varience");
+		//log.info("varience");
 
 		Double std = stats.getStandardDeviation();
 		this.setStd(std);
-		// log.info("std");
+		//log.info("std");
 
 		Power pow = new Power(0.5d);
 		Double gStd = pow.value(v);

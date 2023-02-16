@@ -332,7 +332,9 @@ public class CTQSchedulerVer230105 {
 
 	@Scheduled(cron = "${sch.ctq.daily.cron}")
 	public void SendMail() throws Exception {
-
+		
+		logger.info("CTQ Send MAIL SCHEDULER!");
+		
 		if (!isEnabled)
 			return;
 
@@ -384,8 +386,10 @@ public class CTQSchedulerVer230105 {
 						sendType, onlyNG, rowCount, runHour, runMin));
 
 				// 스케쥴 지정 시간이 아니면 수행 종료
-				if (!isScheduleIsRunnableTime(runHour, runMin))
+				if (!isScheduleIsRunnableTime(runHour, runMin)) {
 					continue;
+				}
+					
 
 				List<Map<String, String>> mailItems = null;
 				logger.info(String.format("GROUPID[%s] ALL-PRODUCT-FLAG[%s]", groupId, all));
@@ -409,7 +413,7 @@ public class CTQSchedulerVer230105 {
 							testLocate, testProv, sendType, onlyNG);
 
 					// CPK, CL 산출
-					logger.info("CL, CPK Summary [{}", productSpecName);
+					logger.info("CL, CPK Summary [{}]", productSpecName);
 					getSpcCpk(productSpecName, ctqDataList, spcMap);
 
 					StringBuffer htmlTable = new StringBuffer();
@@ -585,10 +589,18 @@ public class CTQSchedulerVer230105 {
 			return;
 		}
 
-		Double SL = ctqDataValues.stream().mapToDouble(o -> NumberUtils.toDouble(getMapVal(o, "minValue"))).findFirst()
-				.getAsDouble();
-		Double SU = ctqDataValues.stream().mapToDouble(o -> NumberUtils.toDouble(getMapVal(o, "maxValue"))).findFirst()
-				.getAsDouble();
+		//Double SL = ctqDataValues.stream().mapToDouble(o -> NumberUtils.toDouble(getMapVal(o, "minValue"))).findFirst().orElse(-99999);
+		//Double SU = ctqDataValues.stream().mapToDouble(o -> NumberUtils.toDouble(getMapVal(o, "maxValue"))).findFirst().orElse(-99999);
+		
+		//Double SL = ctqDataValues.stream().mapToDouble(o -> NumberUtils.toDouble(getMapVal(o, "minValue"))).findFirst().orElse(-99999d);
+		//Double SU = ctqDataValues.stream().mapToDouble(o -> NumberUtils.toDouble(getMapVal(o, "maxValue"))).findFirst().orElse(-99999d);
+		
+		Long slCount = ctqDataValues.stream().filter(o -> MapUtils.getDouble(o, "minValue") != null).count();
+		Long suCount = ctqDataValues.stream().filter(o -> MapUtils.getDouble(o, "maxValue") != null).count();
+		
+		Double SL = (slCount > 0 ? ctqDataValues.stream().mapToDouble(o -> MapUtils.getDouble(o, "minValue")).findFirst().orElse(-99999d) : -99999d);
+		Double SU = (suCount > 0 ? ctqDataValues.stream().mapToDouble(o -> MapUtils.getDouble(o, "maxValue")).findFirst().orElse(-99999d) : -99999d);
+		
 		int groupSize = ctqDataValues.stream().mapToInt(o -> Integer.valueOf(getMapVal(o, "n"))).findFirst().getAsInt();
 		logger.info("SL[{}] SU[{}] GROUPSIZE[{}]", new Object[] { SL, SU, groupSize });
 		List<SPCObject1> SpcObjects = new ArrayList<>();
@@ -598,17 +610,17 @@ public class CTQSchedulerVer230105 {
 				SPCObject1 obj = new SPCObject1();
 				for (int i = 1; i <= groupSize; i++) {
 					String mapKey = String.format("value%d", i);
-					// logger.info("mapKey[{}]", mapKey);
+					logger.info("mapKey[{}]", mapKey);
 					Double numVal = MapUtils.getDouble(map, mapKey);
-					/*
-					 * logger.info("{} {} {}", new Object[] { MapUtils.getString(map, "ctqDate"),
-					 * mapKey, numVal });
-					 */
+					
+					logger.info("{} {} {}", new Object[] { MapUtils.getString(map, "ctqDate"), mapKey, numVal });
+					 
 					if (numVal != 0d && numVal != null) {
 						obj.add(numVal);
 						stats.addValue(numVal);
 					}
 				}
+				//logger.info("SPC Object Calculator!!");
 				obj.calculator();
 				if (obj.getGroupSize() > 0) {
 					SpcObjects.add(obj);
@@ -617,7 +629,7 @@ public class CTQSchedulerVer230105 {
 				logger.error(e.getMessage());
 			}
 		}
-
+		logger.info("X, R, V STD START");
 		Double x = SpcObjects.stream().mapToDouble(o -> o.getMean()).average().getAsDouble();
 		Double r = SpcObjects.stream().mapToDouble(o -> o.getRange()).average().getAsDouble();
 		Double v = SpcObjects.stream().mapToDouble(o -> o.getVarience()).average().getAsDouble();
@@ -631,10 +643,26 @@ public class CTQSchedulerVer230105 {
 		Double CL = x;
 		Double UCL = x - +(factor.getA2() * r);
 		logger.info("LCL[{}] CL[{}] UCL[{}]", new Object[] { LCL, CL, UCL });
+		
 
-		Double Cpl = (x - SL) / (3 * groupStd);
-		Double Cpu = (SU - x) / (3 * groupStd);
-		Double Cpk = Math.min(Cpl, Cpu);
+		Double Cpl = 0d;
+		Double Cpu = 0d;
+		Double Cpk = 0d;
+		if (SL.equals(-99999d) && SU.equals(-99999d)) {
+			logger.error("SL, SU All Of Empty.");
+		} else if ( SL.equals(-99999d)) {
+			Cpu = (SU - x) / (3 * groupStd);
+			Cpk = Cpu;
+		} else if ( SU.equals(-99999d)) {
+			Cpl = (x - SL) / (3 * groupStd);
+			Cpk = Cpl;
+		} else {
+			Cpl = (x - SL) / (3 * groupStd);
+			Cpu = (SU - x) / (3 * groupStd);
+			Cpk = Math.min(Cpl, Cpu);
+		}
+
+		
 		logger.info("CPL[{}] CPU[{}] CPK[{}]", new Object[] { Cpl, Cpu, Cpk });
 
 		spcMap.put(productSpecName + "-LCL", LCL);

@@ -26,6 +26,8 @@ public interface AnalysisMapper {
 	
 	public List<CieNameInfo> getCieXYItemName(Map<String, Object> parameter);
 	
+	public List<CieNameInfo> getBinItemName(Map<String, Object> parameter);
+	
 	public List<FileLocation> getInfo(Map<String, Object> parameter);
 	
 	public List<FileLocation> getInfoTaping(Map<String, Object> parameter);

@@ -2,12 +2,13 @@ package com.compact.pop.domain;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.type.Alias;
 
 @Alias("camelmap")
-public class CamelCaseMap extends HashMap<Object, Object> {
+public class CamelCaseMap extends LinkedHashMap<Object, Object> {
 
 	private static final long serialVersionUID = 2249340723027267919L;
 

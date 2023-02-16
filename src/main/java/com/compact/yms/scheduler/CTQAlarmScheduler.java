@@ -186,12 +186,35 @@ public class CTQAlarmScheduler {
 						Double LCL = mean - (factor.getA2() * range);
 						Double CL = mean;
 						Double UCL = mean + (factor.getA2() * range);
-
-						Double SL = dataObjects.stream().mapToDouble(o -> o.getSL()).findFirst().getAsDouble();
-						Double SU = dataObjects.stream().mapToDouble(o -> o.getSU()).findFirst().getAsDouble();
-						Double CPU = (mean - SL) / (3 * groupStd);
-						Double CPL = (SU - mean) / (3 * groupStd);
-						Double CPK = Math.min(CPL, CPU);
+						
+						// dataObjects.stream().map(CTQAlarm::getSU).map(s -> s == null ? null : s.doubleValue()).findFirst().orElse(-99999d);
+						log.info("Check SU, SL Start!");
+						
+						// dataObjects.stream().map(s -> s.getSU()).distinct().findFirst().orElse(-99999d);
+						long slCount = dataObjects.stream().filter(o -> o.getSL() != null).count();
+						long suCount = dataObjects.stream().filter(o -> o.getSU() != null).count();
+						
+						Double SL = (slCount > 0) ? (dataObjects.stream().mapToDouble(o -> o.getSL()).findFirst().getAsDouble()) : (-99999d);
+						Double SU = (suCount > 0) ? (dataObjects.stream().mapToDouble(o -> o.getSU()).findFirst().getAsDouble()) : (-99999d);
+						
+						log.info("Check SU, SL End!");
+						Double CPU = 0d;
+						Double CPL = 0d;
+						Double CPK = 0d;
+						if (SL.equals(-99999d) && SU.equals(-99999d)) {
+							log.error("SL, SU All Of Empty.");
+							continue;
+						} else if (SL.equals(-99999d)) {
+							CPL = (SU - mean) / (3 * groupStd);
+							CPK = CPL;
+						} else if (SU.equals(-99999d)) {
+							CPU = (mean - SL) / (3 * groupStd);
+							CPK = CPU;
+						} else {
+							CPU = (mean - SL) / (3 * groupStd);
+							CPL = (SU - mean) / (3 * groupStd);
+							CPK = Math.min(CPL, CPU);
+						}
 
 						log.info("[{}] CPK[{}] LCL[{}] UCL[{}]", new Object[] { productCd, CPK, LCL, UCL });
 
@@ -328,8 +351,8 @@ public class CTQAlarmScheduler {
 		trtd += "<td>" + testLoc + "</td>";
 		trtd += "<td>" + testProv + "</td>";
 		trtd += "<td>" + dataStart + "~" + dataEnd + "</td>";
-		trtd += "<td>" + String.format("%.2f", sl) + "</td>";
-		trtd += "<td>" + String.format("%.2f", su) + "</td>";
+		trtd += "<td>" + (sl.equals(-99999d) ? "-" : String.format("%.2f", sl)) + "</td>";
+		trtd += "<td>" + (su.equals(-99999d) ? "-" : String.format("%.2f", su)) + "</td>";
 		trtd += "<td>" + String.format("%.2f", avg) + "</td>";
 		trtd += "<td>" + String.format("%.2f", cpu) + "</td>";
 		trtd += "<td>" + String.format("%.2f", cpl) + "</td>";

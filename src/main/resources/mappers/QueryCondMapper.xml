@@ -164,6 +164,59 @@
 		ORDER BY 1 ASC
     </select>
     
+    <select id="getProductSpecNameTP" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT 
+		<choose>
+			<when test="opt != null and opt != ''">
+				DISTINCT A.PRODUCTSPECNAME AS VALUE, P.DESCRIPTION AS DISPLAY
+			</when>
+			<otherwise>
+				DISTINCT A.PRODUCTSPECNAME || '  ' || P.DESCRIPTION AS DISPLAY, A.PRODUCTSPECNAME AS VALUE
+			</otherwise>
+		</choose>
+		FROM YMS_FILEINDEX_10Y A,
+		     V_PRODUCTSPEC P,
+		     POP_PROCESSGROUP L
+		WHERE 1=1
+		  AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND P.PRODUCTSPECNAME = A.PRODUCTSPECNAME
+		  AND A.LOTID = L.PROCESSGROUPNAME
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecName != null">
+			AND A.PRODUCTSPECNAME LIKE '%' || #{productSpecName} || '%'
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
     <select id="getLOTID" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
 		SELECT DISTINCT A.LOTID AS DISPLAY, A.LOTID AS VALUE 
 		FROM YMS_FILEINDEX_10Y A,
@@ -563,6 +616,91 @@
 		</if>
 		<if test="sites != null">
 			<foreach item="site" index="i" collection="sites" open="AND L.FACTORYNAME IN (" separator="," close=")">
+				#{site}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND A.LOTID IN (" separator="," close=")">
+				#{lotId}
+			</foreach>
+		</if>
+		<if test="lotText != null and lotText != ''">
+			AND A.LOTID LIKE #{lotText} || '%'
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND M.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND M.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="target != null">
+			AND L.TARGET LIKE '%' || #{target} || '%'
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND L.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		ORDER BY 1 ASC
+    </select>
+    
+    <select id="getTargetTP" parameterType="hashmap" resultType="com.compact.yms.domain.QueryCond.dto.SearchCondObj" statementType="PREPARED">
+		SELECT DISTINCT L.TARGET AS DISPLAY, L.TARGET AS VALUE 
+		FROM YMS_FILEINDEX_10Y A,
+		     POP_PROCESSGROUP L,
+		     POP_MACHINESPEC M
+		WHERE 1=1
+		  AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  AND A.LOTID = L.PROCESSGROUPNAME
+		  AND L.PROCESSGROUPTYPE = 'ReelBatch'
+		  AND L.TARGET IS NOT NULL
+		  AND A.EQPID = M.MACHINENAME
+		<if test="stepSeqs != null">
+			<foreach item="stepSeq" index="i" collection="stepSeqs" open="AND A.STEPSEQ IN (" separator="," close=")">
+				#{stepSeq}
+			</foreach>
+		</if>
+		<if test="stepTypes != null">
+			<foreach item="stepType" index="i" collection="stepTypes" open="AND A.STEPTYPE IN (" separator="," close=")">
+				#{stepType}
+			</foreach>
+		</if>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="sites != null">
+			<foreach item="site" index="i" collection="sites" open="AND M.FACTORYNAME IN (" separator="," close=")">
 				#{site}
 			</foreach>
 		</if>
@@ -1033,11 +1171,6 @@
 				#{productionType}
 			</foreach>
 		</if>
-		<if test="sites != null">
-			<foreach item="site" index="i" collection="sites" open="AND G.FACTORYNAME IN (" separator="," close=")">
-				#{site}
-			</foreach>
-		</if>
 		<if test="divs != null">
 			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
 				#{div}
@@ -1075,5 +1208,6 @@
 		</if>
 		ORDER BY 1 ASC
     </select>
+    
     
 </mapper>

@@ -9,6 +9,8 @@ import lombok.Setter;
 @Setter
 public class CieNameInfo {
 	
+	String binName;
+	
 	String cieX;
 	
 	String cieY;

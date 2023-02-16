@@ -413,6 +413,15 @@
 		  </foreach>
           )
     </select>
+    <select id="getBinItemName" parameterType="hashmap" resultType="com.compact.yms.domain.analysis.DTO.CieNameInfo" statementType="PREPARED">
+    	SELECT MAX(ENUMVALUE) AS BIN_NAME
+		FROM POP_ENUMDEFVALUE
+		WHERE ENUMNAME = 'CIE-BIN-NAME'
+		  AND 
+		  <foreach item="binItem" index="i" collection="binArr" open="ENUMVALUE IN (" separator="," close=")">
+			  #{binItem}
+		  </foreach>
+    </select>
     <insert id="addHistory" parameterType="hashmap" statementType="PREPARED">
     	INSERT INTO YMS_ANAL_HISTORY (KEY, SAVETYPE, FACTORYNAME, DIV, STARTDT, ENDDT, STEPSEQ, LOTTYPE, PRODUCTSPECGROUP, PRODUCTSPECNAME, PROGRAM, TARGET, CHIPSPEC, FRAMENAME, INTENSITY, PL, LOTID, SUBFRAMENAME, CREATETIME, FILEPATH, BYTES, USERID)
     	VALUES (#{key}, #{saveType}, #{factoryName}, #{div}, #{startDate}, #{endDate}, #{stepSeq}, #{lotType}, #{productSpecGroup}, #{productSpecName}, #{program}, #{target}, #{chipSpec}, #{frameName}, #{intensity}, #{pl}, #{lotId}, #{subFrameName}, SYSDATE, #{filePath}, ${bytes}, #{userId})

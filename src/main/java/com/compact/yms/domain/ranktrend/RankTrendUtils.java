@@ -157,7 +157,7 @@ public class RankTrendUtils {
 
 								if (map.containsKey(itemName)) {
 									List<Double> dataValues = map.get(itemName);
-									logger.info("measureValue data add!!");
+									//logger.info("measureValue data add!!");
 									dataValues.add(measureValue);
 								}
 							}

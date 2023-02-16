@@ -2,45 +2,84 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.compact.yms.domain.qm.yield.seperator.SeperatorYieldMapper">
 	<select id="getChartLabel" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
-		SELECT 0 AS SORTIDX, '평균수율' AS LABEL FROM DUAL
+		SELECT 0 AS SORTIDX, '평균' AS LABEL FROM DUAL
 		UNION ALL
-		SELECT DISTINCT 1 AS SORTIDX, FACTORYMONTH 
+		SELECT DISTINCT 1 AS SORTIDX,  
+		<choose>
+			<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+			<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+		</choose>
 		FROM STD_CALENDAR 
 		WHERE FACTORYNAME = #{factoryName}
-		  AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
-		  				       AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+		<choose>
+			<when test='opt3 == "PREMONTH"'>
+				AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+						 			 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+			</when>
+			<when test='opt3 == "PREWEEK"'>
+				AND FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+			</when>
+		</choose>
 		UNION ALL 
 		SELECT 2 AS SORTIDX, '기간합' AS LABEL 
 		FROM DUAL
 		UNION ALL 
-		SELECT DISTINCT 3 AS SORTIDX, FACTORYDATE 
+		SELECT DISTINCT 3 AS SORTIDX,
+		<choose>
+			<when test='opt2 == "DAY"'>FACTORYDATE</when>
+			<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+			<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+		</choose> 
 		FROM STD_CALENDAR 
 		WHERE FACTORYNAME = #{factoryName}
-		  AND FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		<choose>
+			<when test='opt2 == "DAY"'>
+				AND FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+			</when>
+			<when test='opt2 == "WEEK"'>
+				AND FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+			</when>
+			<when test='opt2 == "MONTH"'>
+				AND FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+			</when>
+		</choose>
 		ORDER BY 1, 2
 	</select>
     <select id="getSeperatorYield" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
     	SELECT 0 AS TP,
-		       '평균수율' AS LABEL,
+		       '평균' AS LABEL,
 		       SUM(GQTY) AS GQTY,
 		       SUM(TQTY - GQTY) AS BQTY,
 		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
 		FROM YMS_FILE_PRDYIELD A
 		WHERE A.FACTORYNAME = #{factoryName}
-		  AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
-		  				       AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+			<choose>
+				<when test='opt3 == "PREMONTH"'>
+					AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+			      			     	   	 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+				</when>
+				<when test='opt3 == "PREWEEK"'>
+					AND A.FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+				</when>
+			</choose>
 		  AND A.STEPSEQ = 'TT'
+		  AND A.RANKID = 'YIELD'
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		<if test="divs != null">
 			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
 				#{div}
 			</foreach>
 		</if>
-		<if test="productGroups != null">
-			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
-				#{productGroup}
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
 			</foreach>
 		</if>
-		<if test="productSpecName != null">
+		<if test="productSpecNames != null">
 			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
 				#{productSpecName}
 			</foreach>
@@ -84,29 +123,48 @@
 			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
 				#{pl}
 			</foreach>
+		</if>
+		<if test="opt4 != null">
+			AND ${opt4} = #{opt5}
 		</if>
 		UNION ALL
 		SELECT 1 AS TP,
-		       FACTORYMONTH AS LABEL,
+		       <choose>
+					<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+					<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+		   		</choose> AS LABEL,
 		       SUM(GQTY) AS GQTY,
 		       SUM(TQTY - GQTY) AS BQTY,
 		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
 		FROM YMS_FILE_PRDYIELD A
 		WHERE A.FACTORYNAME = #{factoryName}
-		  AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
-		  					   AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+		  <choose>
+				<when test='opt3 == "PREMONTH"'>
+					AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+			      			     	   	 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+				</when>
+				<when test='opt3 == "PREWEEK"'>
+					AND A.FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+				</when>
+		   </choose>
 		  AND A.STEPSEQ = 'TT'
+		  AND A.RANKID = 'YIELD'
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		<if test="divs != null">
 			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
 				#{div}
 			</foreach>
 		</if>
-		<if test="productGroups != null">
-			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
-				#{productGroup}
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
 			</foreach>
 		</if>
-		<if test="productSpecName != null">
+		<if test="productSpecNames != null">
 			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
 				#{productSpecName}
 			</foreach>
@@ -151,7 +209,14 @@
 				#{pl}
 			</foreach>
 		</if>
-		GROUP BY FACTORYMONTH
+		<if test="opt4 != null">
+			AND ${opt4} = #{opt5}
+		</if>
+		GROUP BY
+		<choose>
+			<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+			<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+	   </choose>
 		UNION ALL
 		SELECT 2 AS TP,
 		       '기간합' AS LABEL,
@@ -160,19 +225,35 @@
 		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
 		FROM YMS_FILE_PRDYIELD A
 		WHERE A.FACTORYNAME = #{factoryName}
-		  AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  <choose>
+				<when test='opt2 == "DAY"'>
+					AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+				</when>
+				<when test='opt2 == "WEEK"'>
+					AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+				</when>
+				<when test='opt2 == "MONTH"'>
+					AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+				</when>
+		  </choose>
 		  AND A.STEPSEQ = 'TT'
+		  AND A.RANKID = 'YIELD'
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		<if test="divs != null">
 			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
 				#{div}
 			</foreach>
 		</if>
-		<if test="productGroups != null">
-			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
-				#{productGroup}
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
 			</foreach>
 		</if>
-		<if test="productSpecName != null">
+		<if test="productSpecNames != null">
 			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
 				#{productSpecName}
 			</foreach>
@@ -217,27 +298,51 @@
 				#{pl}
 			</foreach>
 		</if>
+		<if test="opt4 != null">
+			AND ${opt4} = #{opt5}
+		</if>
 		UNION ALL
 		SELECT 3 AS TP,
-		       FACTORYDATE,
+		       <choose>
+					<when test='opt2 == "DAY"'>FACTORYDATE</when>
+					<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+					<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+			  	</choose> 
+			   AS FACTORYDATE,
 		       SUM(GQTY) AS GQTY,
 		       SUM(TQTY - GQTY) AS BQTY,
 		       ROUND(SUM(GQTY)/SUM(TQTY)*100, 2) AS YIELD
 		FROM YMS_FILE_PRDYIELD A
 		WHERE A.FACTORYNAME = #{factoryName}
-		  AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		  <choose>
+				<when test='opt2 == "DAY"'>
+					AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+				</when>
+				<when test='opt2 == "WEEK"'>
+					AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+				</when>
+				<when test='opt2 == "MONTH"'>
+					AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+				</when>
+		  </choose>
 		  AND A.STEPSEQ = 'TT'
+		  AND A.RANKID = 'YIELD'
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
 		<if test="divs != null">
 			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
 				#{div}
 			</foreach>
 		</if>
-		<if test="productGroups != null">
-			<foreach item="productGroup" index="i" collection="productGroups" open="AND A.PRODUCTGROUP IN (" separator="," close=")">
-				#{productGroup}
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
 			</foreach>
 		</if>
-		<if test="productSpecName != null">
+		<if test="productSpecNames != null">
 			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
 				#{productSpecName}
 			</foreach>
@@ -282,7 +387,2651 @@
 				#{pl}
 			</foreach>
 		</if>
-		GROUP BY A.FACTORYDATE
+		<if test="opt4 != null">
+			AND ${opt4} = #{opt5}
+		</if>
+		GROUP BY
+		<choose>
+			<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+			<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+			<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+	  	</choose>
 		ORDER BY 1, 2
     </select>
+    
+    <select id="getDateRange" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT DISTINCT 
+		<choose>
+			<when test='opt2 == "DAY"'>FACTORYDATE</when>
+			<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+			<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+		</choose> 
+		AS DATADATE
+		FROM STD_CALENDAR
+		WHERE FACTORYNAME = #{factoryName}
+		  AND FACTORYDATE BETWEEN #{startDate} AND #{endDate} 
+	   ORDER BY 1
+	</select>
+	
+	<select id="getPrevousDateRange" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT DISTINCT 
+		<choose>
+			<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+			<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+		</choose>
+		AS DATADATE
+		FROM STD_CALENDAR
+		WHERE FACTORYNAME = #{factoryName}
+		<choose>
+			<when test='opt3 == "PREMONTH"'>
+				AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+	      			     	   	 	 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+			</when>
+			<when test='opt3 == "PREWEEK"'>
+				AND FACTORYDATE BETWEEN TO_CHAR(TO_DATE(#{startDate},'YYYYMMDD') - (7*3), 'YYYYMMDD') 
+	      			     	   	 	AND TO_CHAR(TO_DATE(#{startDate},'YYYYMMDD') - (7), 'YYYYMMDD')
+			</when>
+		</choose> 
+	   ORDER BY 1
+	</select>
+	
+	<select id="getSYieldTable" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+	WITH YIELD AS (
+	SELECT 0 AS IDX, '0.TOTAL' AS GRP, '평균' AS SUBGRP, SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	WHERE FACTORYNAME = #{factoryName}
+	<choose>
+		<when test='opt3 == "PREMONTH"'>
+			AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+	      			     	   	 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+		</when>
+		<when test='opt3 == "PREWEEK"'>
+			AND FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+		</when>
+	</choose>
+	      AND STEPSEQ = 'TT'
+	      AND RANKID = 'YIELD'
+	    <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+		<if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	UNION ALL
+	SELECT 1 AS IDX, ${opt1} AS GRP, '평균' AS SUBGRP, SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	WHERE FACTORYNAME = #{factoryName}
+  	<choose>
+		<when test='opt3 == "PREMONTH"'>
+			AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+	      			     	   	 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+		</when>
+		<when test='opt3 == "PREWEEK"'>
+			AND FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+		</when>
+	</choose>
+	  AND STEPSEQ = 'TT'
+	  AND RANKID = 'YIELD'
+	  <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY ${opt1}
+	UNION ALL
+	SELECT 2 AS IDX, '0.TOTAL' AS GRP, 
+		   <choose>
+				<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+				<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+		   </choose> AS SUBGRP, 
+		   SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	    WHERE FACTORYNAME = #{factoryName}
+		<choose>
+			<when test='opt3 == "PREMONTH"'>
+				AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+		      			     	   	 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+			</when>
+			<when test='opt3 == "PREWEEK"'>
+				AND FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+			</when>
+		</choose>
+	      AND STEPSEQ = 'TT'
+	      AND RANKID = 'YIELD'
+	    <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	    <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY
+	<choose>
+		<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+		<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+   </choose>
+	UNION ALL
+	SELECT 3 AS IDX, ${opt1} AS GRP, 
+		   <choose>
+				<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+				<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+		   </choose> AS SUBGRP,
+		   SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	WHERE FACTORYNAME = #{factoryName}
+	  <choose>
+			<when test='opt3 == "PREMONTH"'>
+				AND FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+		      			     	   	 AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+			</when>
+			<when test='opt3 == "PREWEEK"'>
+				AND FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+			</when>
+	  </choose>
+	  AND STEPSEQ = 'TT'
+	  AND RANKID = 'YIELD'
+	  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	  <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY ${opt1},
+	<choose>
+		<when test='opt3 == "PREMONTH"'>FACTORYMONTH</when>
+		<when test='opt3 == "PREWEEK"'>FACTORYWEEK</when>
+	</choose>
+	UNION ALL
+	SELECT 4 AS IDX, '0.TOTAL' AS GRP, '기간합' AS SUBGRP, SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	WHERE FACTORYNAME = #{factoryName}
+	<choose>
+			<when test='opt2 == "DAY"'>
+				AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+			</when>
+			<when test='opt2 == "WEEK"'>
+				AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+			</when>
+			<when test='opt2 == "MONTH"'>
+				AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+			</when>
+	  </choose>
+	  AND STEPSEQ = 'TT'
+	  AND RANKID = 'YIELD'
+	  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	  <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	UNION ALL
+	SELECT 5 AS IDX, ${opt1} AS GRP, '기간합' AS SUBGRP, SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	WHERE FACTORYNAME = #{factoryName}
+	<choose>
+		<when test='opt2 == "DAY"'>
+			AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		</when>
+		<when test='opt2 == "WEEK"'>
+			AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+		</when>
+		<when test='opt2 == "MONTH"'>
+			AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+		</when>
+    </choose>
+	  AND STEPSEQ = 'TT'
+	  AND RANKID = 'YIELD'
+	  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	  <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY ${opt1}
+	UNION ALL
+	SELECT 6 AS IDX, '0.TOTAL' AS GRP, 
+		   <choose>
+				<when test='opt2 == "DAY"'>FACTORYDATE</when>
+				<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+				<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+			</choose> AS SUBGRP, 
+		   SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	    WHERE FACTORYNAME = #{factoryName}
+	      <choose>
+				<when test='opt2 == "DAY"'>
+					AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+				</when>
+				<when test='opt2 == "WEEK"'>
+					AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+				</when>
+				<when test='opt2 == "MONTH"'>
+					AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+				</when>
+		  </choose>
+	      AND STEPSEQ = 'TT'
+	      AND RANKID = 'YIELD'
+	      <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	      <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY
+	<choose>
+		<when test='opt2 == "DAY"'>FACTORYDATE</when>
+		<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+		<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+	</choose>
+	UNION ALL
+	SELECT 7 AS IDX, ${opt1} AS GRP, 
+		   <choose>
+				<when test='opt2 == "DAY"'>FACTORYDATE</when>
+				<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+				<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+			</choose> AS SUBGRP,  
+		   SUM(GQTY) AS GQTY, SUM(TQTY-GQTY) AS BQTY, SUM(TQTY) AS TQTY, SUM(GQTY)/SUM(TQTY) AS YLD
+	FROM YMS_FILE_PRDYIELD A
+	WHERE FACTORYNAME = #{factoryName}
+	  <choose>
+			<when test='opt2 == "DAY"'>
+				AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+			</when>
+			<when test='opt2 == "WEEK"'>
+				AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+			</when>
+			<when test='opt2 == "MONTH"'>
+				AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+			</when>
+	  </choose>
+	  AND STEPSEQ = 'TT'
+	  AND RANKID = 'YIELD'
+	  <if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	  <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY ${opt1},
+	<choose>
+		<when test='opt2 == "DAY"'>FACTORYDATE</when>
+		<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+		<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+	</choose>
+	), 
+	COMMON AS (
+	    SELECT 0 AS TP FROM DUAL
+	    UNION ALL
+	    SELECT 1 AS TP FROM DUAL
+	    UNION ALL
+	    SELECT 2 AS TP FROM DUAL
+	    UNION ALL
+	    SELECT 3 AS TP FROM DUAL
+	    UNION ALL
+	    SELECT 4 AS TP FROM DUAL 
+	)
+	SELECT REPLACE(Y.GRP, '0.', '') AS "GROUP",
+	       DECODE(C.TP, 0, 'YIELD',  1, 'PROD_QTY', 2, 'P_RATIO', 3, 'BAD_QTY', 4, 'B_RATIO') AS DATANAME,
+	       MAX(CASE WHEN Y.SUBGRP = '평균' THEN DECODE(C.TP, 0, ROUND(Y.YLD * 100, 2), 1, Y.GQTY, 2, ROUND(GQTY/TQTY, 2), 3, Y.BQTY, 4, ROUND(BQTY/TQTY, 0)) END) AS "평균",
+	       <foreach item="preDate" index="i" collection="previousDates" open="" separator="," close="">
+				MAX(CASE WHEN Y.SUBGRP = #{preDate} THEN DECODE(C.TP, 0, ROUND(Y.YLD * 100, 2), 1, Y.GQTY, 2, ROUND(GQTY/TQTY, 2), 3, Y.BQTY, 4, ROUND(BQTY/TQTY, 0)) END) AS "${preDate}"
+		   </foreach>
+	       , MAX(CASE WHEN Y.SUBGRP = '기간합' THEN DECODE(C.TP, 0, ROUND(Y.YLD * 100, 2), 1, Y.GQTY, 2, ROUND(GQTY/TQTY, 2), 3, Y.BQTY, 4, ROUND(BQTY/TQTY, 0)) END) AS "기간합",
+	       <foreach item="date" index="i" collection="dates" open="" separator="," close="">
+				MAX(CASE WHEN Y.SUBGRP = #{date} THEN DECODE(C.TP, 0, ROUND(Y.YLD * 100, 2), 1, Y.GQTY, 2, ROUND(GQTY/TQTY, 2), 3, Y.BQTY, 4, ROUND(BQTY/TQTY, 0)) END) AS "${date}"
+		   </foreach>
+	FROM YIELD Y, COMMON C
+	GROUP BY Y.GRP, C.TP
+	ORDER BY Y.GRP, C.TP
+	</select>
+	<select id="getProgramBinItems" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT DISTINCT DISPLAY, VALUE
+		FROM (
+			SELECT 
+				ZBINNO,
+			    CASE 
+			        WHEN #{opt1} = 'BIN' THEN ZBINNO || DECODE(ZBNAME, NULL, '', ' (' || ZBNAME || ')') 
+			        WHEN #{opt1} = 'CIE' THEN NVL(ZCIE,'-')
+			        WHEN #{opt1} = 'IV' THEN NVL(ZMCD,'-')
+			        WHEN #{opt1} = 'FLUX' THEN NVL(ZLUMEN,'-')
+			        WHEN #{opt1} = 'VF' THEN NVL(ZVF,'-')
+			    END AS DISPLAY,
+			    CASE 
+			        WHEN #{opt1} = 'BIN' THEN ZBINNO
+			        WHEN #{opt1} = 'CIE' THEN NVL(ZCIE,'-')
+			        WHEN #{opt1} = 'IV' THEN NVL(ZMCD,'-')
+			        WHEN #{opt1} = 'FLUX' THEN NVL(ZLUMEN,'-')
+			        WHEN #{opt1} = 'VF' THEN NVL(ZVF,'-')
+			    END AS VALUE
+			FROM POP_ERP_SEPERATOR
+			WHERE WERKS = #{factoryName}
+			  AND MATNR = #{productSpecName}
+			  AND ZTEPG = #{program}
+		)
+		<choose>
+			<when test='opt1 == "BIN"'>ORDER BY TO_NUMBER(VALUE) ASC</when>
+			<otherwise>
+				ORDER BY 1 ASC
+			</otherwise>
+		</choose>
+		
+	</select>
+	<select id="getSYieldDetailPeriod" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT A.LOTID,
+	       A.FACTORYDATE,
+	       A.DIV,
+	       A.PRODUCTSPECGROUP,
+	       A.PRODUCTSPECNAME || '(' || P.DESCRIPTION || ')' AS PRODUCTSPECNAME,
+	       A.PROGRAM,
+	       A.LOTTYPE,
+	       A.EQPID || '(' || M.DESCRIPTION || ')' AS EQPID,
+	       L.CHIPSPEC,
+	       L.FRAMENAME,
+	       L.TARGET,
+	       MI.TOTALPROPORTION,
+	       PG.PIG,
+	       'BIN' AS TYPE,
+	       'YIELD' AS RANKID,
+	       SUM(A.GQTY) AS GQTY,
+	       SUM(A.TQTY) AS TQTY,
+	       ROUND(SUM(A.GQTY)/SUM(A.TQTY)*100, 2) AS YIELD,
+	       MI.MOLD_LOT_NO || '-' || MO.MD_WORK_SEQ MD_WORK_SEQ,
+	       L.NMMACHINENAME,
+	       L.NMEVENTUSER,
+	       L.MOLDMACHINENAME,
+	       L.MOLDEVENTUSER,
+	       L.AFCMACHINENAME,
+	       L.AFCEVENTUSER,
+	       L.BGMACHINENAME,
+	       L.BGEVENTUSER,
+	       L.SORTERMACHINENAME,
+	       L.SORTEREVENTUSER
+	  FROM YMS_FILEINDEX_10Y A,
+	       POP_LOT L,
+	       POP_TB_MOLDING_INFO MI,
+	       V_PIG PG,
+	       POP_TB_ELEMENT_MEMO MO,
+	       V_PRODUCTSPEC P,
+	       POP_MACHINESPEC M
+	 WHERE     L.FACTORYNAME = #{factoryName}
+	       AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+	       <![CDATA[
+	       AND A.TQTY > 0
+	       ]]>
+	       AND A.LOTID = L.LOTNAME
+	       AND A.EQPID = M.MACHINENAME
+	       AND A.DIV = P.DIV
+	       AND A.PRODUCTSPECNAME = P.PRODUCTSPECNAME
+	       AND A.LOTID = MI.LOTNAME(+)
+	       AND A.LOTID = PG.LOTID(+)
+	       AND A.LOTID = MO.LOTID(+)
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	    <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY A.LOTID,
+	       A.FACTORYDATE,
+	       A.DIV,
+	       A.PRODUCTSPECGROUP,
+	       A.PRODUCTSPECNAME || '(' || P.DESCRIPTION || ')',
+	       A.PROGRAM,
+	       A.LOTTYPE,
+	       A.EQPID || '(' || M.DESCRIPTION || ')',
+	       L.CHIPSPEC,
+	       L.FRAMENAME,
+	       L.TARGET,
+	       MI.TOTALPROPORTION,
+	       PG.PIG,
+	       L.NMMACHINENAME,
+	       L.NMEVENTUSER,
+	       L.MOLDMACHINENAME,
+	       L.MOLDEVENTUSER,
+	       L.AFCMACHINENAME,
+	       L.AFCEVENTUSER,
+	       L.BGMACHINENAME,
+	       L.BGEVENTUSER,
+	       L.SORTERMACHINENAME,
+	       L.SORTEREVENTUSER,
+	       MI.MOLD_LOT_NO || '-' || MO.MD_WORK_SEQ
+	ORDER BY FACTORYDATE, LOTID, DIV, PRODUCTSPECGROUP, PRODUCTSPECNAME, PROGRAM, EQPID
+	</select>
+	
+	<select id="getSYieldDetailPeriodOfBin" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT A.LOTID,
+	       A.FACTORYDATE,
+	       A.DIV,
+	       A.PRODUCTSPECGROUP,
+	       A.PRODUCTSPECNAME || '(' || P.DESCRIPTION || ')' AS PRODUCTSPECNAME,
+	       A.PROGRAM,
+	       A.LOTTYPE,
+	       A.EQPID || '(' || M.DESCRIPTION || ')' AS EQPID,
+	       L.CHIPSPEC,
+	       L.FRAMENAME,
+	       L.TARGET,
+	       MI.TOTALPROPORTION,
+	       PG.PIG,
+	       #{binType} AS TYPE,
+	       <choose>
+				<when test='binType == "BIN"'>B.RANKID || '(' || A.RANKNAME || ')'</when>
+				<when test='binType == "CIE"'>B.CIE</when>
+				<when test='binType == "IV"'>B.INTENSITY</when>
+				<when test='binType == "FLUX"'>B.FLUX</when>
+				<when test='binType == "VF"'>B.VF</when>
+		   </choose> AS RANKID,
+	       SUM(CASE WHEN ZPASS='Y' THEN B.QTY END) AS GQTY,
+	       SUM(B.QTY) AS TQTY,
+	       
+	       ROUND(
+	       	DECODE(SUM (CASE WHEN ZPASS = 'Y' THEN B.QTY END), 0, NULL, SUM (CASE WHEN ZPASS = 'Y' THEN B.QTY END))/DECODE(SUM (B.QTY), 0, NULL, SUM (B.QTY)) *100, 2) AS YIELD,
+	       MI.MOLD_LOT_NO || '-' || MO.MD_WORK_SEQ MD_WORK_SEQ,
+	       L.NMMACHINENAME,
+	       L.NMEVENTUSER,
+	       L.MOLDMACHINENAME,
+	       L.MOLDEVENTUSER,
+	       L.AFCMACHINENAME,
+	       L.AFCEVENTUSER,
+	       L.BGMACHINENAME,
+	       L.BGEVENTUSER,
+	       L.SORTERMACHINENAME,
+	       L.SORTEREVENTUSER
+	  FROM YMS_FILEINDEX_10Y A,
+	  	   YMS_FSM_RANK B,
+	       POP_LOT L,
+	       POP_TB_MOLDING_INFO MI,
+	       V_PIG PG,
+	       POP_TB_ELEMENT_MEMO MO,
+	       V_PRODUCTSPEC P,
+	       POP_MACHINESPEC M
+	 WHERE     L.FACTORYNAME = #{factoryName}
+	       AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+	       <![CDATA[
+	       AND A.TQTY > 0
+	       ]]>
+	       AND A.LOTID = L.LOTNAME
+	       AND A.EQPID = M.MACHINENAME
+	       AND A.DIV = P.DIV
+	       AND A.FMKEY = B.FMKEY
+	       AND A.PRODUCTSPECNAME = P.PRODUCTSPECNAME
+	       AND A.LOTID = MI.LOTNAME(+)
+	       AND A.LOTID = PG.LOTID(+)
+	       AND A.LOTID = MO.LOTID(+)
+		   <choose>
+				<when test='binType == "BIN"'>
+					<foreach item="item" index="i" collection="binItems" open="AND B.RANKID IN (" separator="," close=")">
+						#{item}
+					</foreach>
+				</when>
+				<when test='binType == "CIE"'>
+					<foreach item="item" index="i" collection="binItems" open="AND B.CIE IN (" separator="," close=")">
+						#{item}
+					</foreach>
+				</when>
+				<when test='binType == "IV"'>
+					<foreach item="item" index="i" collection="binItems" open="AND B.INTENSITY IN (" separator="," close=")">
+						#{item}
+					</foreach>
+				</when>
+				<when test='binType == "FLUX"'>
+					<foreach item="item" index="i" collection="binItems" open="AND B.FLUX IN (" separator="," close=")">
+						#{item}
+					</foreach>
+				</when>
+				<when test='binType == "VF"'>
+					<foreach item="item" index="i" collection="binItems" open="AND B.VF IN (" separator="," close=")">
+						#{item}
+					</foreach>
+				</when>
+			</choose>
+		<if test="productionTypes != null">
+			<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+				#{productionType}
+			</foreach>
+		</if>
+	    <if test="divs != null">
+			<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+				#{div}
+			</foreach>
+		</if>
+		<if test="productSpecGroups != null">
+			<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+				#{productSpecGroup}
+			</foreach>
+		</if>
+		<if test="productSpecNames != null">
+			<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+				#{productSpecName}
+			</foreach>
+		</if>
+		<if test="vendors != null">
+			<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+				#{vendor}
+			</foreach>
+		</if>
+		<if test="models != null">
+			<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+				#{model}
+			</foreach>
+		</if>
+		<if test="machines != null">
+			<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+				#{machine}
+			</foreach>
+		</if>
+		<if test="programs != null">
+			<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+				#{program}
+			</foreach>
+		</if>
+		<if test="targets != null">
+			<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+				#{target}
+			</foreach>
+		</if>
+		<if test="chipSpecs != null">
+			<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+				#{chipSpec}
+			</foreach>
+		</if>
+		<if test="frameNames != null">
+			<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+				#{frameName}
+			</foreach>
+		</if>
+		<if test="pls != null">
+			<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+				#{pl}
+			</foreach>
+		</if>
+	GROUP BY A.LOTID,
+	       A.FACTORYDATE,
+	       A.DIV,
+	       A.PRODUCTSPECGROUP,
+	       A.PRODUCTSPECNAME || '(' || P.DESCRIPTION || ')',
+	       A.PROGRAM,
+	       A.LOTTYPE,
+	       A.EQPID || '(' || M.DESCRIPTION || ')',
+	       L.CHIPSPEC,
+	       L.FRAMENAME,
+	       L.TARGET,
+	       MI.TOTALPROPORTION,
+	       PG.PIG,
+	       L.NMMACHINENAME,
+	       L.NMEVENTUSER,
+	       L.MOLDMACHINENAME,
+	       L.MOLDEVENTUSER,
+	       L.AFCMACHINENAME,
+	       L.AFCEVENTUSER,
+	       L.BGMACHINENAME,
+	       L.BGEVENTUSER,
+	       L.SORTERMACHINENAME,
+	       L.SORTEREVENTUSER,
+	       MI.MOLD_LOT_NO || '-' || MO.MD_WORK_SEQ,
+	       <choose>
+				<when test='binType == "BIN"'>B.RANKID || '(' || A.RANKNAME || ')'</when>
+				<when test='binType == "CIE"'>B.CIE</when>
+				<when test='binType == "IV"'>B.INTENSITY</when>
+				<when test='binType == "FLUX"'>B.FLUX</when>
+				<when test='binType == "VF"'>B.VF</when>
+		   </choose>
+	ORDER BY FACTORYDATE, LOTID, DIV, PRODUCTSPECGROUP, PRODUCTSPECNAME, PROGRAM, EQPID
+	</select>
+	
+	<select id="getProgramCie" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT CIE, X1, Y1, X2, Y2, X3, Y3, X4, Y4
+		FROM POP_ERP_SEPERATOR_CIE
+		WHERE WERKS = #{factoryName}
+		  AND MATNR = #{productSpecName}  
+		  AND ZTEPG = #{program}
+		ORDER BY CIE ASC
+	</select>
+	
+	<select id="getSeperatorFiles" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT FMKEY,
+			   FILENAME, 
+       		   REPLACE(REMOTEFILENAME, '\', '/') AS REMOTEFILENAME
+		FROM YMS_FILEINDEX_10Y
+		WHERE 1=1
+		  <choose>
+		  	<when test='stepSeq != "" and stepSeq != null'>
+		  		AND STEPSEQ = #{stepSeq}
+		  	</when>
+		  	<otherwise>
+		  		AND STEPSEQ = 'TT'
+		  	</otherwise>
+		  </choose>
+		  <if test="lotIds != null">
+		  	<foreach item="lotId" index="i" collection="lotIds" open="AND LOTID IN (" separator="," close=")">#{lotId}</foreach>
+		  </if>
+		  AND PRODUCTSPECNAME = #{productSpecName}
+		  AND PROGRAM = #{program}
+		  <![CDATA[
+		  	AND TQTY > 0
+		  ]]>
+	</select>
+	
+	<select id="getSeperatorIV" parameterType="hashmap" 
+			resultType="com.compact.yms.domain.qm.yield.seperator.model.SeperatorIVDTO"  statementType="PREPARED">
+		SELECT ZBINNO AS BINNO, 
+		       CASE WHEN DECODE(ZMCD, NULL, ZLUMEN, ZMCD) IS NULL AND ZCIE IS NULL THEN '-'
+		       ELSE DECODE(ZMCD, NULL, ZLUMEN, ZMCD) || ' ' || ZCIE
+		       END AS IV,
+		       DECODE(ZMCD, NULL, ZLUMEN, ZMCD) AS INTENSITY,
+		       ZCIE AS CIE,
+		       0 AS QTY,
+		       0 AS PER
+		FROM POP_ERP_SEPERATOR
+		WHERE WERKS = #{factoryName}
+		  AND MATNR = #{productSpecName}  
+		  AND ZTEPG = #{program}
+		ORDER BY TO_NUMBER(ZBINNO) ASC
+	</select>
+	
+	<select id="getSeperatorYieldOfBin" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		WITH PREVIOUSDATA
+		     AS (  SELECT 1 AS TP,
+		     			  A.${opt1} AS "GROUP",
+		                  'TOTAL' AS RANKID,
+		                  <choose>
+							<when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+							<when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+					   	  </choose> AS FACTORYDATE,
+		                  SUM (CASE WHEN A.ZPASS = 'Y' THEN QTY ELSE 0 END) AS GQTY,
+		                  SUM (QTY) AS TQTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+		            	AND   A.STEPSEQ = 'TT'
+		                  <choose>
+							<when test='opt3 == "PREMONTH"'>
+								AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+							    					   AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+							</when>
+							<when test='opt3 == "PREWEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+							</when>
+						  </choose>
+						  <choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+						<if test="opt4 != '' and opt5 != ''">
+							AND ${opt4} = #{opt5}
+						</if>
+		         	GROUP BY A.${opt1},
+		         	<choose>
+						<when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+						<when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+					</choose>
+		         	),
+		     PREVIOUSSUM
+		     AS (  SELECT 0 AS TP,
+		                  'TOTAL' AS "GROUP",
+		                  '평균' AS RANKID,
+		                  '평균' AS FACTORYDATE,
+		                  SUM (GQTY) AS GQTY,
+		                  SUM (TQTY) AS TQTY
+		             FROM PREVIOUSDATA
+		         GROUP BY "GROUP"),
+		     PERIODDATA
+		     AS (  SELECT 3 AS TP,
+		                  A.${opt1} AS "GROUP",
+		                  <choose>
+							<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+							<when test='binType == "CIE"'>A.CIE</when>
+							<when test='binType == "IV"'>A.INTENSITY</when>
+							<when test='binType == "FLUX"'>A.FLUX</when>
+							<when test='binType == "VF"'>A.VF</when>
+						  </choose> AS RANKID,
+		                  A.FACTORYDATE AS FACTORYDATE,
+		                  SUM (CASE WHEN A.ZPASS = 'Y' THEN QTY ELSE 0 END) AS GQTY,
+		                  SUM (QTY) AS TQTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+		            	AND   A.STEPSEQ = 'TT'
+		                  <choose>
+							<when test='opt2 == "DAY"'>
+								AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+							</when>
+							<when test='opt2 == "WEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+							</when>
+							<when test='opt2 == "MONTH"'>
+								AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+							</when>
+						  </choose>
+						  <choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+						<if test="opt4 != '' and opt5 != ''">
+							AND ${opt4} = #{opt5}
+						</if>
+		         GROUP BY A.${opt1}, 
+		         	<choose>
+						<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+						<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+						<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+					</choose>,
+					<choose>
+						<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+						<when test='binType == "CIE"'>A.CIE</when>
+						<when test='binType == "IV"'>A.INTENSITY</when>
+						<when test='binType == "FLUX"'>A.FLUX</when>
+						<when test='binType == "VF"'>A.VF</when>
+					</choose>),
+		     PERIODSUM
+		     AS (  SELECT 2 AS TP,
+		                  "GROUP",
+		                  RANKID,
+		                  '기간합' AS FACTORYDATE,
+		                  SUM (GQTY) AS GQTY,
+		                  SUM (TQTY) AS TQTY
+		             FROM PERIODDATA
+		         GROUP BY "GROUP", RANKID)
+		SELECT TP,
+		       "GROUP",
+		       RANKID,
+		       "GROUP" || '/' || RANKID AS SERIES,
+		       FACTORYDATE,
+		       DECODE(GQTY, 0, NULL, GQTY) AS GQTY,
+		       DECODE(TQTY, 0, NULL, TQTY) AS TQTY,
+		       ROUND(DECODE(GQTY, 0, NULL, GQTY)/DECODE(TQTY, 0, NULL, TQTY)*100, 2) AS YIELD
+		  FROM PREVIOUSSUM
+		UNION ALL
+		SELECT TP,
+		       "GROUP",
+		       RANKID,
+		       "GROUP" || '/' || RANKID AS SERIES,
+		       FACTORYDATE,
+		       DECODE(GQTY, 0, NULL, GQTY) AS GQTY,
+		       DECODE(TQTY, 0, NULL, TQTY) AS TQTY,
+		       ROUND(DECODE(GQTY, 0, NULL, GQTY)/DECODE(TQTY, 0, NULL, TQTY)*100, 2) AS YIELD
+		  FROM PREVIOUSDATA
+		UNION ALL
+		SELECT TP,
+		       "GROUP",
+		       RANKID,
+		       "GROUP" || '/' || RANKID AS SERIES,
+		       FACTORYDATE,
+		       DECODE(GQTY, 0, NULL, GQTY) AS GQTY,
+		       DECODE(TQTY, 0, NULL, TQTY) AS TQTY,
+		       ROUND(DECODE(GQTY, 0, NULL, GQTY)/DECODE(TQTY, 0, NULL, TQTY)*100, 2) AS YIELD
+		  FROM PERIODSUM
+		UNION ALL
+		SELECT TP,
+		       "GROUP",
+		       RANKID,
+		       "GROUP" || '/' || RANKID AS SERIES,
+		       FACTORYDATE,
+		       DECODE(GQTY, 0, NULL, GQTY) AS GQTY,
+		       DECODE(TQTY, 0, NULL, TQTY) AS TQTY,
+		       ROUND(DECODE(GQTY, 0, NULL, GQTY)/DECODE(TQTY, 0, NULL, TQTY)*100, 2) AS YIELD
+		  FROM PERIODDATA
+		ORDER BY 1, 2, 3, 4, 5
+	</select>
+	
+	<select id="getSeperatorRankYield" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		WITH PREVIOUSDATA AS (
+			SELECT 1 AS TP,
+                  A.${opt1} AS "GROUP",
+                  'TOTAL' AS RANKID,
+                  <choose>
+					 <when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+					 <when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+				  </choose>
+                  AS "LABEL",
+                  SUM (CASE WHEN A.ZPASS = 'Y' THEN QTY ELSE 0 END) AS GQTY,
+                  SUM (QTY) AS TQTY
+             FROM YMS_FILE_PRDYIELD A
+            WHERE     A.FACTORYNAME = #{factoryName}
+                  AND A.STEPSEQ = 'TT'
+                  <choose>
+					<when test='opt3 == "PREMONTH"'>
+						AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+					    					   AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+					</when>
+					<when test='opt3 == "PREWEEK"'>
+						AND A.FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+					</when>
+				  </choose>
+				<if test="productionTypes != null">
+					<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+						#{productionType}
+					</foreach>
+				</if>
+				<if test="divs != null">
+					<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+						#{div}
+					</foreach>
+				</if>
+				<if test="productSpecGroups != null">
+					<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+						#{productSpecGroup}
+					</foreach>
+				</if>
+				<if test="productSpecNames != null">
+					<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+						#{productSpecName}
+					</foreach>
+				</if>
+				<if test="vendors != null">
+					<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+						#{vendor}
+					</foreach>
+				</if>
+				<if test="models != null">
+					<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+						#{model}
+					</foreach>
+				</if>
+				<if test="machines != null">
+					<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+						#{machine}
+					</foreach>
+				</if>
+				<if test="programs != null">
+					<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+						#{program}
+					</foreach>
+				</if>
+				<if test="targets != null">
+					<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+						#{target}
+					</foreach>
+				</if>
+				<if test="chipSpecs != null">
+					<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+						#{chipSpec}
+					</foreach>
+				</if>
+				<if test="frameNames != null">
+					<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+						#{frameName}
+					</foreach>
+				</if>
+				<if test="pls != null">
+					<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+						#{pl}
+					</foreach>
+				</if>
+				<if test="opt4 != '' and opt5 != ''">
+					AND ${opt4} = #{opt5}
+				</if>
+         	GROUP BY A.${opt1},
+         	<choose>
+				 <when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+				 <when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+			</choose>
+         ),
+		     PREVIOUSSUM
+		     AS (  SELECT 0 AS TP,
+		                  A."GROUP",
+		                  A.RANKID,
+		                  '평균' AS "LABEL",
+		                  SUM (GQTY) AS GQTY,
+		                  SUM (TQTY) AS TQTY
+		             FROM PREVIOUSDATA A
+		         GROUP BY A."GROUP", A.RANKID),
+		     PERIODDATA
+		     AS (  SELECT 3 AS TP,
+		                  A.${opt1} AS "GROUP",
+		                  'TOTAL' AS RANKID,
+		                  <choose>
+							<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+							<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+							<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+						  </choose> AS "LABEL",
+		                  SUM (CASE WHEN A.ZPASS = 'Y' THEN QTY ELSE 0 END) AS GQTY,
+		                  SUM (QTY) AS TQTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+		                  AND A.STEPSEQ = 'TT'
+		                  <choose>
+							<when test='opt2 == "DAY"'>
+								AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+							</when>
+							<when test='opt2 == "WEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+							</when>
+							<when test='opt2 == "MONTH"'>
+								AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+							</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+						<if test="opt4 != '' and opt5 != ''">
+							AND ${opt4} = #{opt5}
+						</if>
+		         	GROUP BY A.${opt1}, 
+		         	<choose>
+						<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+						<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+						<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+					</choose>),
+		     PERIODSUM
+		     AS (  SELECT 2 AS TP,
+		                  A."GROUP",
+		                  A.RANKID,
+		                  '기간합' AS "LABEL",
+		                  SUM (GQTY) AS GQTY,
+		                  SUM (TQTY) AS TQTY
+		             FROM PERIODDATA A
+		         GROUP BY A."GROUP", A.RANKID),
+		     PREVIOUS_DAY_DATA
+		     AS (  SELECT 5 AS TP,
+		                  A.${opt1} AS "GROUP",
+							<choose>
+								<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+								<when test='binType == "CIE"'>A.CIE</when>
+								<when test='binType == "IV"'>A.INTENSITY</when>
+								<when test='binType == "FLUX"'>A.FLUX</when>
+								<when test='binType == "VF"'>A.VF</when>
+							</choose> AS RANKID,
+				         	<choose>
+								<when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+								<when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+							</choose> AS "LABEL",
+		                  SUM (CASE WHEN A.ZPASS = 'Y' THEN QTY ELSE 0 END) AS GQTY,
+		                  SUM (QTY) AS TQTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+		                  AND A.STEPSEQ = 'TT'
+		                  <choose>
+							<when test='opt3 == "PREMONTH"'>
+								AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+							    					   AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+							</when>
+							<when test='opt3 == "PREWEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+							</when>
+						  </choose>
+						  <choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+						<if test="opt4 != '' and opt5 != ''">
+							AND ${opt4} = #{opt5}
+						</if>
+		         GROUP BY A.${opt1},
+		         <choose>
+					<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+					<when test='binType == "CIE"'>A.CIE</when>
+					<when test='binType == "IV"'>A.INTENSITY</when>
+					<when test='binType == "FLUX"'>A.FLUX</when>
+					<when test='binType == "VF"'>A.VF</when>
+				</choose>,
+	         	<choose>
+					<when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+					<when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+				</choose>),
+		     PREVIOUS_DAY_SUM
+		     AS (  SELECT 4 AS TP,
+		                  A."GROUP",
+		                  A.RANKID,
+		                  '평균' AS "LABEL",
+		                  SUM (GQTY) AS GQTY,
+		                  SUM (TQTY) AS TQTY
+		             FROM PREVIOUS_DAY_DATA A
+		         GROUP BY A."GROUP", A.RANKID),
+		     PERIOD_DAY_DATA
+		     AS (SELECT DISTINCT
+		                7 AS TP,
+		                A.${opt1} AS "GROUP",
+		                <choose>
+							<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+							<when test='binType == "CIE"'>A.CIE</when>
+							<when test='binType == "IV"'>A.INTENSITY</when>
+							<when test='binType == "FLUX"'>A.FLUX</when>
+							<when test='binType == "VF"'>A.VF</when>
+						</choose> AS RANKID,
+		                <choose>
+							<when test='opt2 == "DAY"'>FACTORYDATE</when>
+							<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+							<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+						</choose>
+						AS "LABEL",
+		                SUM (CASE WHEN A.ZPASS = 'Y' THEN QTY ELSE 0 END)
+		                   OVER (PARTITION BY A.${opt1}, 
+		                   	<choose>
+								<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+								<when test='binType == "CIE"'>A.CIE</when>
+								<when test='binType == "IV"'>A.INTENSITY</when>
+								<when test='binType == "FLUX"'>A.FLUX</when>
+								<when test='binType == "VF"'>A.VF</when>
+							</choose>, 
+							<choose>
+								<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+								<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+								<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+							</choose>)
+		                   AS GQTY,
+		                SUM (QTY)
+		                   OVER (PARTITION BY A.${opt1}, 
+		                   	<choose>
+								<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+								<when test='binType == "CIE"'>A.CIE</when>
+								<when test='binType == "IV"'>A.INTENSITY</when>
+								<when test='binType == "FLUX"'>A.FLUX</when>
+								<when test='binType == "VF"'>A.VF</when>
+							</choose>, 
+							<choose>
+								<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+								<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+								<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+							</choose>)
+		                   AS TQTY
+		           FROM YMS_FILE_PRDYIELD A
+		          WHERE     A.FACTORYNAME = #{factoryName}
+		                AND A.STEPSEQ = 'TT'
+						  <choose>
+							<when test='opt2 == "DAY"'>
+								AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+							</when>
+							<when test='opt2 == "WEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+							</when>
+							<when test='opt2 == "MONTH"'>
+								AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+							</when>
+						  </choose>
+						  <choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+						<if test="opt4 != '' and opt5 != ''">
+							AND ${opt4} = #{opt5}
+						</if>),
+		     PERIOD_DAY_SUM
+		     AS (  SELECT 6 AS TP,
+		                  A."GROUP",
+		                  A.RANKID,
+		                  '기간합' AS "LABEL",
+		                  SUM (GQTY) AS GQTY,
+		                  SUM (TQTY) AS TQTY
+		             FROM PERIOD_DAY_DATA A
+		         GROUP BY A."GROUP", A.RANKID)
+		SELECT TP,
+			   "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PREVIOUSSUM
+		UNION ALL
+		SELECT TP,
+			   "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PREVIOUSDATA
+		UNION ALL
+		SELECT TP,
+			   "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PERIODSUM
+		UNION ALL
+		SELECT TP,
+			   "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PERIODDATA
+		UNION ALL
+		SELECT TP,
+			   "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PREVIOUS_DAY_SUM
+		UNION ALL
+		SELECT TP,
+			   "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PREVIOUS_DAY_DATA
+		UNION ALL
+		SELECT TP,
+		       "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PERIOD_DAY_SUM
+		UNION ALL
+		SELECT TP,
+		       "GROUP" || '/' || RANKID AS "SERIES",
+		       "GROUP",
+		       RANKID,
+		       "LABEL",
+		       GQTY,
+		       TQTY,
+		       ROUND (DECODE (GQTY, 0, NULL, GQTY) / DECODE (TQTY, 0, NULL, TQTY) * 100, 2) AS YIELD
+		  FROM PERIOD_DAY_DATA
+		ORDER BY TP,
+		         "GROUP",
+		         RANKID,
+		         LABEL
+	</select>
+	<select id="getSorterData" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		SELECT A.FMKEY,
+		       C.COMBINE_NO,
+		       A.FILENAME, 
+		       REPLACE(REMOTEFILENAME, '\', '/') AS REMOTEFILENAME
+		FROM YMS_FILEINDEX_10Y A,
+		     POP_TB_COMBINE_LABEL C
+		WHERE A.LOTID = C.COMBINE_NO
+		<if test="lotIds != null">
+			<foreach item="lotId" index="i" collection="lotIds" open="AND C.LOTID IN (" separator="," close=")">#{lotId}</foreach>
+		</if>
+	</select>
+	<select id="getCieItemName" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		WITH ITEMNAMETABLE
+		     AS (SELECT ENUMVALUE, DEFAULTFLAG
+		           FROM POP_ENUMDEFVALUE E, YMS_MEASUREITEMNAME A
+		          WHERE     E.ENUMNAME = 'CIE-BIN-NAME'
+		                AND A.ITEMNAME = E.ENUMVALUE
+		                AND A.FMKEY = #{fmKey}
+		         UNION ALL
+		         SELECT ENUMVALUE, DEFAULTFLAG
+		           FROM POP_ENUMDEFVALUE E, YMS_MEASUREITEMNAME A
+		          WHERE     E.ENUMNAME = 'CIE-XY-NAME'
+		                AND A.ITEMNAME = E.ENUMVALUE
+		                AND E.DEFAULTFLAG IN ('X', 'Y')
+		                AND A.FMKEY = #{fmKey})
+		SELECT MAX (CASE WHEN DEFAULTFLAG = 'BIN' THEN ENUMVALUE END) AS BIN,
+		       MAX (CASE WHEN DEFAULTFLAG = 'X' THEN ENUMVALUE END) AS X,
+		       MAX (CASE WHEN DEFAULTFLAG = 'Y' THEN ENUMVALUE END) AS Y
+		  FROM ITEMNAMETABLE
+	</select>
+	<select id="getSYieldTableOfBin" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+		WITH TOTAL_PREV_DATA
+		     AS (  SELECT 1 AS TP,
+		                  '0.TOTAL' AS "GROUP",
+		                  <choose>
+							 <when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+							 <when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+						  </choose>
+		                  AS DATADATE,
+		                  <choose>
+								<when test='binType == "BIN"'>0</when>
+								<when test='binType == "CIE"'>'0'</when>
+								<when test='binType == "IV"'>'0'</when>
+								<when test='binType == "FLUX"'>'0'</when>
+								<when test='binType == "VF"'>'0'</when>
+						  </choose> AS DSORT,
+		                  'TOTAL' AS RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+		            	  AND A.STEPSEQ = 'TT'
+		            <![CDATA[ 
+		            	  AND A.RANKID <> 'YIELD' 
+					]]>
+		                  <choose>
+							<when test='opt3 == "PREMONTH"'>
+								AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+							    					   AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+							</when>
+							<when test='opt3 == "PREWEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+							</when>
+						  </choose>
+						  <choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+		         GROUP BY 
+				<choose>
+					<when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+					<when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+				</choose>),
+		     TOTAL_PREV_SUM
+		     AS (  SELECT 0 AS TP,
+		                  "GROUP",
+		                  '평균' AS DATADATE,
+		                  DSORT,
+		                  RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM TOTAL_PREV_DATA
+		         GROUP BY "GROUP", RANKID, DSORT),
+		     TOTAL_PERIOD_DATA
+		     AS (  SELECT 3 AS TP,
+		                  '0.TOTAL' AS "GROUP",
+						  <choose>
+								<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+								<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+								<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+						  </choose> 
+		                  AS DATADATE,
+		                  <choose>
+								<when test='binType == "BIN"'>0</when>
+								<when test='binType == "CIE"'>'0'</when>
+								<when test='binType == "IV"'>'0'</when>
+								<when test='binType == "FLUX"'>'0'</when>
+								<when test='binType == "VF"'>'0'</when>
+						  </choose> AS DSORT,
+		                  'TOTAL' AS RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+						  AND A.STEPSEQ = 'TT'
+		            <![CDATA[ 
+		            	  AND A.RANKID <> 'YIELD' 
+					]]>
+						<choose>
+							<when test='opt2 == "DAY"'>
+								AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+							</when>
+							<when test='opt2 == "WEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+							</when>
+							<when test='opt2 == "MONTH"'>
+								AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+							</when>
+						</choose>
+						<choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+		         GROUP BY
+				<choose>
+					<when test='opt2 == "DAY"'>A.FACTORYDATE</when>
+					<when test='opt2 == "WEEK"'>A.FACTORYWEEK</when>
+					<when test='opt2 == "MONTH"'>A.FACTORYMONTH</when>
+				</choose>
+				),
+		     TOTAL_PERIOD_SUM
+		     AS (  SELECT 2 AS TP,
+		                  "GROUP",
+		                  '기간합' AS DATADATE,
+		                  DSORT,
+		                  RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM TOTAL_PERIOD_DATA
+		         GROUP BY "GROUP", RANKID, DSORT),
+		     PREV_DATA
+		     AS (  SELECT 5 AS TP,
+		                  ${opt1} AS "GROUP",
+		                  <choose>
+							 <when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+							 <when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+						  </choose> AS DATADATE,
+						  <choose>
+								<when test='binType == "BIN"'>TO_NUMBER(A.RANKID)</when>
+								<when test='binType == "CIE"'>A.CIE</when>
+								<when test='binType == "IV"'>A.INTENSITY</when>
+								<when test='binType == "FLUX"'>A.FLUX</when>
+								<when test='binType == "VF"'>A.VF</when>
+						  </choose> AS DSORT,
+		                  <choose>
+								<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+								<when test='binType == "CIE"'>A.CIE</when>
+								<when test='binType == "IV"'>A.INTENSITY</when>
+								<when test='binType == "FLUX"'>A.FLUX</when>
+								<when test='binType == "VF"'>A.VF</when>
+						  </choose> AS RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+		            	  AND A.STEPSEQ = 'TT'
+		            <![CDATA[ 
+		            	  AND A.RANKID <> 'YIELD' 
+					]]>
+		                  <choose>
+							<when test='opt3 == "PREMONTH"'>
+								AND A.FACTORYMONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -3), 'YYYYMM') 
+							    					   AND TO_CHAR(ADD_MONTHS(TO_DATE(#{startDate},'YYYYMMDD'), -1), 'YYYYMM')
+							</when>
+							<when test='opt3 == "PREWEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{preStartDate} AND #{preEndDate}
+							</when>
+						  </choose>
+		                  <choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.EQPID IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+		         GROUP BY ${opt1}, 
+		         		  <choose>
+							 <when test='opt3 == "PREMONTH"'>A.FACTORYMONTH</when>
+							 <when test='opt3 == "PREWEEK"'>A.FACTORYWEEK</when>
+						  </choose>,
+		                  <choose>
+								<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')', A.RANKID</when>
+								<when test='binType == "CIE"'>A.CIE</when>
+								<when test='binType == "IV"'>A.INTENSITY</when>
+								<when test='binType == "FLUX"'>A.FLUX</when>
+								<when test='binType == "VF"'>A.VF</when>
+						  </choose>),
+		     PREV_SUM
+		     AS (  SELECT 4 AS TP,
+		                  "GROUP",
+		                  '평균' AS DATADATE,
+		                  DSORT,
+		                  RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM PREV_DATA
+		         GROUP BY "GROUP", RANKID, DSORT),
+		     PERIOD_DATA
+		     AS (  SELECT 7 AS TP,
+		                  ${opt1} AS "GROUP",
+		                  <choose>
+							<when test='opt2 == "DAY"'>FACTORYDATE</when>
+							<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+							<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+						  </choose> AS DATADATE,
+						  <choose>
+								<when test='binType == "BIN"'>TO_NUMBER(A.RANKID)</when>
+								<when test='binType == "CIE"'>A.CIE</when>
+								<when test='binType == "IV"'>A.INTENSITY</when>
+								<when test='binType == "FLUX"'>A.FLUX</when>
+								<when test='binType == "VF"'>A.VF</when>
+						  </choose> AS DSORT,
+		                  <choose>
+							<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')'</when>
+							<when test='binType == "CIE"'>A.CIE</when>
+							<when test='binType == "IV"'>A.INTENSITY</when>
+							<when test='binType == "FLUX"'>A.FLUX</when>
+							<when test='binType == "VF"'>A.VF</when>
+						  </choose> AS RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM YMS_FILE_PRDYIELD A
+		            WHERE     A.FACTORYNAME = #{factoryName}
+		                  AND A.STEPSEQ = 'TT'
+		            <![CDATA[ 
+		            	  AND A.RANKID <> 'YIELD' 
+					]]>
+		                  <choose>
+							<when test='opt2 == "DAY"'>
+								AND A.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+							</when>
+							<when test='opt2 == "WEEK"'>
+								AND A.FACTORYWEEK BETWEEN #{startWeek} AND #{endWeek}
+							</when>
+							<when test='opt2 == "MONTH"'>
+								AND A.FACTORYMONTH BETWEEN #{startMonth} AND #{endMonth}
+							</when>
+						  </choose>
+						  <choose>
+						  	<when test='binType == "BIN"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.RANKID IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "CIE"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.CIE IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "IV"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.INTENSITY IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "FLUX"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.FLUX IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  	<when test='binType == "VF"'>
+						  		<foreach item="item" index="i" collection="binItems" open="AND A.VF IN (" separator="," close=")">
+									#{item}
+								</foreach>
+						  	</when>
+						  </choose>
+						<if test="productionTypes != null">
+							<foreach item="productionType" index="i" collection="productionTypes" open="AND A.LOTTYPE IN (" separator="," close=")">
+								#{productionType}
+							</foreach>
+						</if>
+						<if test="divs != null">
+							<foreach item="div" index="i" collection="divs" open="AND A.DIV IN (" separator="," close=")">
+								#{div}
+							</foreach>
+						</if>
+						<if test="productSpecGroups != null">
+							<foreach item="productSpecGroup" index="i" collection="productSpecGroups" open="AND A.PRODUCTSPECGROUP IN (" separator="," close=")">
+								#{productSpecGroup}
+							</foreach>
+						</if>
+						<if test="productSpecNames != null">
+							<foreach item="productSpecName" index="i" collection="productSpecNames" open="AND A.PRODUCTSPECNAME IN (" separator="," close=")">
+								#{productSpecName}
+							</foreach>
+						</if>
+						<if test="vendors != null">
+							<foreach item="vendor" index="i" collection="vendors" open="AND A.VENDOR IN (" separator="," close=")">
+								#{vendor}
+							</foreach>
+						</if>
+						<if test="models != null">
+							<foreach item="model" index="i" collection="models" open="AND A.MODEL IN (" separator="," close=")">
+								#{model}
+							</foreach>
+						</if>
+						<if test="machines != null">
+							<foreach item="machine" index="i" collection="machines" open="AND A.EQPID IN (" separator="," close=")">
+								#{machine}
+							</foreach>
+						</if>
+						<if test="programs != null">
+							<foreach item="program" index="i" collection="programs" open="AND A.PROGRAM IN (" separator="," close=")">
+								#{program}
+							</foreach>
+						</if>
+						<if test="targets != null">
+							<foreach item="target" index="i" collection="targets" open="AND A.TARGET IN (" separator="," close=")">
+								#{target}
+							</foreach>
+						</if>
+						<if test="chipSpecs != null">
+							<foreach item="chipSpec" index="i" collection="chipSpecs" open="AND A.CHIPSPEC IN (" separator="," close=")">
+								#{chipSpec}
+							</foreach>
+						</if>
+						<if test="frameNames != null">
+							<foreach item="frameName" index="i" collection="frameNames" open="AND A.FRAMENAME IN (" separator="," close=")">
+								#{frameName}
+							</foreach>
+						</if>
+						<if test="pls != null">
+							<foreach item="pl" index="i" collection="pls" open="AND A.PL IN (" separator="," close=")">
+								#{pl}
+							</foreach>
+						</if>
+		         GROUP BY ${opt1},
+		         <choose>
+					<when test='opt2 == "DAY"'>FACTORYDATE</when>
+					<when test='opt2 == "WEEK"'>FACTORYWEEK</when>
+					<when test='opt2 == "MONTH"'>FACTORYMONTH</when>
+				  </choose>,
+                  <choose>
+					<when test='binType == "BIN"'>A.RANKID || '(' || A.RANKNAME || ')', A.RANKID</when>
+					<when test='binType == "CIE"'>A.CIE</when>
+					<when test='binType == "IV"'>A.INTENSITY</when>
+					<when test='binType == "FLUX"'>A.FLUX</when>
+					<when test='binType == "VF"'>A.VF</when>
+				  </choose>
+		         ),
+		     PERIOD_SUM
+		     AS (  SELECT 6 AS TP,
+		                  "GROUP",
+		                  '기간합' AS DATADATE,
+		                  DSORT,
+		                  RANKID,
+		                  SUM (QTY) AS QTY
+		             FROM PERIOD_DATA
+		         GROUP BY "GROUP", RANKID, DSORT),
+		     TOTAL_TABLEDATA
+		     AS (SELECT * FROM TOTAL_PREV_SUM
+		         UNION ALL
+		         SELECT * FROM TOTAL_PREV_DATA
+		         UNION ALL
+		         SELECT * FROM TOTAL_PERIOD_SUM
+		         UNION ALL
+		         SELECT * FROM TOTAL_PERIOD_DATA
+		         UNION ALL
+		         SELECT * FROM PREV_SUM
+		         UNION ALL
+		         SELECT * FROM PREV_DATA
+		         UNION ALL
+		         SELECT * FROM PERIOD_SUM
+		         UNION ALL
+		         SELECT * FROM PERIOD_DATA)
+		  SELECT "GROUP",
+		         RANKID,
+		         MAX (CASE WHEN (TP = 0 OR TP = 4) THEN QTY END) AS "평균",
+		         <foreach item="preDate" index="i" collection="previousDates" open="" separator="," close="">
+		         	MAX (CASE WHEN (TP = 1 OR TP = 5) AND DATADATE = #{preDate} THEN QTY END) AS "${preDate}"
+		         </foreach>
+		         , MAX (CASE WHEN (TP = 2 OR TP = 6) AND DATADATE = '기간합' THEN QTY END) AS "기간합",
+		         <foreach item="date" index="i" collection="dates" open="" separator="," close="">
+		         	MAX (CASE WHEN (TP = 3 OR TP = 7) AND DATADATE = #{date} THEN QTY END) AS "${date}"
+		         </foreach>
+		    FROM TOTAL_TABLEDATA
+		GROUP BY "GROUP", RANKID, DSORT
+		ORDER BY "GROUP", DSORT
+	</select>
 </mapper>

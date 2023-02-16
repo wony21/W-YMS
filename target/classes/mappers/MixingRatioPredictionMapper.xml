@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.compact.yms.domain.qm.analysis.mix.MixingRatioPredictionMapper">
+    <select id="getMixRawDataCIE" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+    	SELECT DISTINCT M.FMKEY,
+		       M.LOTID AS LOTNAME,
+		       M.SEQ AS SLOTNO,
+		       L.PRODUCTIONTYPE,
+		       M.PRODUCTSPECGROUP,
+		       M.PRODUCTSPECNAME AS PARTID,
+		       M.STEPSEQ,
+		       (SELECT MAX (MOLD_EQP) KEEP (DENSE_RANK FIRST ORDER BY BEAKER_NO DESC) FROM POP_TB_MOLDING_LOT X WHERE X.LOTNAME = M.LOTID) EQPID,
+		       L.LASTEVENTUSER AS EVENTUSER,
+		       L.TARGET,
+		       L.CHIPSPEC AS CHIPNAME,
+		       L.INTENSITY,
+		       L.PL,
+		       L.FRAMENAME,
+		       MI.TOTALPROPORTION,
+		       M.TQTY AS T_QTY,
+		       D.NSUMQTY,
+		       D.NAVG,
+		       D.NSTD,
+		       D.NMEDIAN,
+		       ROUND(D.NPERCENTILE100, 4) AS NPERCENTILE100,
+		       ROUND(D.NPERCENTILE99, 4) AS NPERCENTILE99,
+		       ROUND(D.NPERCENTILE97, 4) AS NPERCENTILE97,
+		       ROUND(D.NPERCENTILE95, 4) AS NPERCENTILE95,
+		       SUBSTR (MI.MOLD_LOT_NO, LENGTH (MI.MOLD_LOT_NO), 1) MOLD_COUNT,
+		       MI.MOLD_SEQ MOLD_SEQ,
+		       MI.MOLD_LOT_NO || '-' || MI.MOLD_SEQ MD_WORK_SEQ,
+		       NVL((SELECT MAX(TARGET_X_AXIS) KEEP (DENSE_RANK FIRST ORDER BY LASTMODIFIEDTIME DESC, POSITION DESC) AS TARGET_X_AXIS
+		        FROM POP_TB_MP_DETAILEDSPEC MP
+		        WHERE MP.DIV = M.DIV
+		          AND MP.ITEM_CODE = M.PRODUCTSPECNAME
+		          AND MP.VERSION = MI.VERSION
+		          AND MP.TARGET = L.TARGET), 0) AS TARGET_X_AXIS,
+		       NVL((SELECT MAX(TARGET_Y_AXIS) KEEP (DENSE_RANK FIRST ORDER BY LASTMODIFIEDTIME DESC, POSITION DESC) AS TARGET_Y_AXIS
+		        FROM POP_TB_MP_DETAILEDSPEC MP
+		        WHERE MP.DIV = M.DIV
+		          AND MP.ITEM_CODE = M.PRODUCTSPECNAME
+		          AND MP.VERSION = MI.VERSION
+		          AND MP.TARGET = L.TARGET), 0) AS TARGET_Y_AXIS,
+		       ROUND (D.NAVG99, 4) NAVG99,
+		       ROUND (D.NAVG97, 4) NAVG97,
+		       ROUND (D.NAVG95, 4) NAVG95,
+		       D.ITEMID,
+		       L.AFCMACHINENAME AS AFMACHINE,
+		       L.TTMACHINENAME AS TTMACHINE,
+		       '-' AS PBMACHINE,
+		       PG.PIG,
+		       PT.PIGBATCH
+		  FROM YMS_FILEINDEX_10Y M,
+		       YMS_FSM_ITEM_D D,
+		       YMS_FSM_RANK R,
+		       POP_LOT L,
+		       POP_TB_MOLDING_LOT MI,
+		       V_PIG PG,
+		       V_PT PT
+		 WHERE M.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		   AND D.ITEMID IN (SELECT ${cie} FROM V_${cie}_NAME)
+		   AND M.FMKEY = D.FMKEY
+		   AND M.FMKEY = R.FMKEY
+		   AND M.TQTY > 0
+		   AND R.ITEMTYPE = 'RANK'
+		   AND R.RANKID = 'YIELD'
+		   AND M.LOTID = L.LOTNAME
+		   AND M.PRODUCTSPECNAME = L.PRODUCTSPECNAME
+		   AND M.LOTID = MI.LOTNAME
+		   AND M.PRODUCTSPECNAME = MI.ITEM_CODE
+		   AND M.LOTID = PG.LOTID(+)
+		   AND M.LOTID = PT.LOTID(+)
+		   AND M.STEPSEQ = #{stepSeq}
+		   AND M.LOTTYPE = #{productionType}
+		   AND M.DIV = #{div}
+		   AND M.PRODUCTSPECGROUP = #{productSpecGroup}
+		   AND M.PRODUCTSPECNAME = #{productSpecName}
+		   AND L.TARGET = #{target}
+		   <if test='lotIds != null'>
+		   		<foreach item="lotId" index="i" collection="lotIds" open="AND M.LOTID IN (" separator="," close=")">
+					#{lotId}
+				</foreach>
+		   </if>
+		   <if test='lotText != "" and lotText != null'>
+				AND M.LOTID LIKE '%' || #{lotText} || '%'
+		   </if>
+		ORDER BY LOTNAME
+    </select>
+    <select id="getLots" parameterType="hashmap" resultType="camelmap" statementType="PREPARED">
+      SELECT DISTINCT L.LOTNAME
+		    FROM POP_LOT L,
+		         YMS_FILEINDEX_10Y M,
+		         YMS_FSM_ITEM_D D
+		   WHERE     M.FACTORYDATE BETWEEN #{startDate} AND #{endDate}
+		         AND M.PRODUCTSPECNAME = '6250340L'
+		         AND L.LOTNAME = M.LOTID
+		         AND M.STEPSEQ = #{stepSeq}
+		         AND L.TARGET = #{target}
+		         AND M.FMKEY = D.FMKEY
+		         AND D.ITEMID IN (SELECT CIE_X FROM V_CIE_X_NAME
+		                          UNION ALL
+		                          SELECT CIE_Y FROM V_CIE_Y_NAME)
+		ORDER BY 1 ASC
+    </select>
+</mapper>

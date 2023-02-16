@@ -34,6 +34,9 @@ public class CTQService {
 
 	@Value("${image.path}")
 	String uploadPath;
+	
+	@Value("${factory}")
+	String siteFactory;
 
 	public List getTest() {
 		return mapper.getList();

@@ -306,7 +306,12 @@ public class EqpFileService extends BaseService {
 
 							String[] columns = contents.split(",");
 							for (String column : columns) {
-								dataColumnNames.add(column);
+								String newColumn = column.trim();
+								int seq = 1;
+								while(dataColumnNames.contains(newColumn)) {
+									newColumn = String.format("%s-%d", newColumn, seq++);
+								}
+								dataColumnNames.add(newColumn);
 							}
 						}
 
@@ -320,7 +325,7 @@ public class EqpFileService extends BaseService {
 							Map<String, String> dataRow = new HashMap<>();
 							String[] datas = contents.split(",");
 							for (int j = 0; j < datas.length; j++) {
-								dataRow.put(dataColumnNames.get(j), datas[j]);
+								dataRow.put(dataColumnNames.get(j), datas[j].trim());
 							}
 							dataRows.add(dataRow);
 						}
@@ -336,7 +341,7 @@ public class EqpFileService extends BaseService {
 							Map<String, String> dataRow = new HashMap<>();
 							String[] datas = contents.split(",");
 							for (int j = 0; j < datas.length; j++) {
-								dataRow.put(dataColumnNames.get(j), datas[j]);
+								dataRow.put(dataColumnNames.get(j), datas[j].trim());
 							}
 							dataRows.add(dataRow);
 						}
@@ -370,8 +375,8 @@ public class EqpFileService extends BaseService {
 				String content = "";
 				for (String columnName : dataColumnNames) {
 					
-					if (!dataRow.containsKey(columnName)) {
-						log.error(String.format("Cannot found key[%s]", columnName));
+					if (!dataRow.containsKey(columnName.trim())) {
+						log.error(String.format("Cannot found key[%s]", columnName.trim()));
 						continue;
 					}
 					
