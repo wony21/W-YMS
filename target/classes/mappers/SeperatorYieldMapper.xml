@@ -1295,7 +1295,7 @@
 	       PG.PIG,
 	       #{binType} AS TYPE,
 	       <choose>
-				<when test='binType == "BIN"'>B.RANKID || '(' || A.RANKNAME || ')'</when>
+				<when test='binType == "BIN"'>B.RANKID || '(' || B.RANKNAME || ')'</when>
 				<when test='binType == "CIE"'>B.CIE</when>
 				<when test='binType == "IV"'>B.INTENSITY</when>
 				<when test='binType == "FLUX"'>B.FLUX</when>
@@ -1450,7 +1450,7 @@
 	       L.SORTEREVENTUSER,
 	       MI.MOLD_LOT_NO || '-' || MO.MD_WORK_SEQ,
 	       <choose>
-				<when test='binType == "BIN"'>B.RANKID || '(' || A.RANKNAME || ')'</when>
+				<when test='binType == "BIN"'>B.RANKID || '(' || B.RANKNAME || ')'</when>
 				<when test='binType == "CIE"'>B.CIE</when>
 				<when test='binType == "IV"'>B.INTENSITY</when>
 				<when test='binType == "FLUX"'>B.FLUX</when>
