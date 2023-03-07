@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -73,11 +74,12 @@ public class SeperatorYieldUtils {
 		// Find CIE-X CIE-Y Position
 		String[] itemNames = contentLines[itemNameIndex].split(",");
 		for (int i = 0; i < itemNames.length; i++) {
-			if (itemNames[i].toLowerCase().trim().equals(cieX.toLowerCase().trim())) {
+			String itemTrimName = StringUtils.deleteWhitespace(itemNames[i]).toLowerCase();
+			if (itemTrimName.equals(StringUtils.deleteWhitespace(cieX).toLowerCase())) {
 				cieXIndex = i;
-			} else if (itemNames[i].toLowerCase().trim().equals(cieY.toLowerCase().trim())) {
+			} else if (itemTrimName.equals(StringUtils.deleteWhitespace(cieY).toLowerCase())) {
 				cieYIndex = i;
-			} else if (itemNames[i].toLowerCase().trim().equals(bin.toLowerCase().trim())) {
+			} else if (itemTrimName.equals(StringUtils.deleteWhitespace(bin).toLowerCase())) {
 				binIndex = i;
 			}
 		}
@@ -120,9 +122,9 @@ public class SeperatorYieldUtils {
 				
 				String ivValue = "-";
 				
-				SeperatorIVDTO ivObj = binInfos.stream().filter(o -> o.getBinNo().equals(binValue)).findFirst().orElse(null);
-				if (ivObj != null) {
-					ivValue = ivObj.getIv();
+				Optional<SeperatorIVDTO> ivObj = binInfos.stream().filter(o -> o.getBinNo().equals(binValue)).findFirst();
+				if (ivObj.isPresent()) {
+					ivValue = ivObj.get().getIv();
 				}
 				
 				if (!cieXValue.isEmpty() && !cieYValue.isEmpty()) {
@@ -133,8 +135,13 @@ public class SeperatorYieldUtils {
 						obj.setBinNo(binValue);
 						obj.setCieX(x);
 						obj.setCieY(y);
-						obj.setIntensity(ivObj.getIntensity());
-						obj.setCie(ivObj.getCie());
+						if (ivObj.isPresent()) {
+							obj.setIntensity(ivObj.get().getIntensity());
+							obj.setCie(ivObj.get().getCie());
+						} else {
+							obj.setIntensity("-");
+							obj.setCie("-");
+						}
 						obj.setIvName(ivValue);
 						itemValues.add(obj);
 					}
