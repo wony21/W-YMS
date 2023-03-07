@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,12 +157,12 @@ public class SeperatorYieldUtils {
 		int cieXIndex = -1;
 		int cieYIndex = -1;
 		for (int i = 0; i < contentLines.length; i++) {
-			if (contentLines[i].toLowerCase().trim().contains(bin.toLowerCase().trim())
-				&& contentLines[i].toLowerCase().trim().contains(cieX.toLowerCase().trim())
-				&& contentLines[i].toLowerCase().trim().contains(cieY.toLowerCase().trim())) {
-				itemNameIndex = i;
-				itemStartIndex = (i + 1);
-				break;
+			if (StringUtils.deleteWhitespace(contentLines[i]).toLowerCase().contains(StringUtils.deleteWhitespace(bin.toLowerCase()))
+			&& StringUtils.deleteWhitespace(contentLines[i]).toLowerCase().contains(StringUtils.deleteWhitespace(cieX.toLowerCase()))
+			&& StringUtils.deleteWhitespace(contentLines[i]).toLowerCase().contains(StringUtils.deleteWhitespace(cieY.toLowerCase()))) {
+					itemNameIndex = i;
+					itemStartIndex = (i + 1);
+					break;
 			}
 		}
 		
@@ -175,11 +176,11 @@ public class SeperatorYieldUtils {
 		// Find CIE-X CIE-Y Position
 		String[] itemNames = contentLines[itemNameIndex].split(",");
 		for (int i = 0; i < itemNames.length; i++) {
-			if (itemNames[i].toLowerCase().trim().equals(cieX.toLowerCase().trim())) {
+			if (StringUtils.deleteWhitespace(itemNames[i]).toLowerCase().equals(StringUtils.deleteWhitespace(cieX).toLowerCase())) {
 				cieXIndex = i;
-			} else if (itemNames[i].toLowerCase().trim().equals(cieY.toLowerCase().trim())) {
+			} else if (StringUtils.deleteWhitespace(itemNames[i]).toLowerCase().equals(StringUtils.deleteWhitespace(cieY).toLowerCase())) {
 				cieYIndex = i;
-			} else if (itemNames[i].toLowerCase().trim().equals(bin.toLowerCase().trim())) {
+			} else if ((StringUtils.deleteWhitespace(itemNames[i]).toLowerCase().equals(StringUtils.deleteWhitespace(bin).toLowerCase()))) {
 				binIndex = i;
 			}
 		}
@@ -270,9 +271,9 @@ public class SeperatorYieldUtils {
 			String[] contentLines = fileContents.split("\r\n");
 			
 			for(int j=0; j<contentLines.length; j++) {
-				if (contentLines[j].toLowerCase().trim().contains(bin.toLowerCase().trim())
-				&& contentLines[j].toLowerCase().trim().contains(cieX.toLowerCase().trim())
-				&& contentLines[j].toLowerCase().trim().contains(cieY.toLowerCase().trim())) {
+				if (StringUtils.deleteWhitespace(contentLines[j]).toLowerCase().contains(StringUtils.deleteWhitespace(bin.toLowerCase()))
+				&& StringUtils.deleteWhitespace(contentLines[j]).toLowerCase().contains(StringUtils.deleteWhitespace(cieX.toLowerCase()))
+				&& StringUtils.deleteWhitespace(contentLines[j]).toLowerCase().contains(StringUtils.deleteWhitespace(cieY.toLowerCase())))  {
 					ITEMNAME_ROWIDX = j;
 					ITEM_ROWIDX = (j + 1);
 					logger.info("[{}] FILE ITEM LINE : {}", new Object[] { j, contentLines[j] });
