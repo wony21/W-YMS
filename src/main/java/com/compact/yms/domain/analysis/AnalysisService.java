@@ -742,8 +742,10 @@ public class AnalysisService extends BaseService {
 			}
 			String cieX = nameInfo.getCieX();
 			String cieY = nameInfo.getCieY();
-			logger.info("Get measuredata for cie-x, cie-y");
+			//logger.info("Get measuredata for cie-x, cie-y");
+			logger.info("getItemBothValueList");
 			List<ShareDataObject> measureValues = AnalysisUtils.getItemBothValueList(file, itemName, cieX, cieY);
+			logger.info("occBothChipCount");
 			List<TableShareData> tableData = AnalysisUtils.occBothChipCount(shareLists, location, measureValues);
 			tableLists.addAll(tableData);
 			itemValueData.getItemBothValue().addAll(measureValues);

@@ -37,10 +37,10 @@
     	<level value="debug"></level>
     </logger> -->
     <logger name="jdbc.sqltiming">
-    	<level value="debug"></level>
+    	<level value="error"></level>
     </logger>
     <logger name="jdbc.resultsettable" additivity="false">
-		<level value="debug" />
+		<level value="error" />
 		<appender-ref ref="console" />
 	</logger>
 
